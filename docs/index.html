@@ -92,16 +92,18 @@
     .each-row { justify-content: space-between; align-items: flex-end; margin-bottom: 8px; display: flex; }
     .label { color: #fff; font-size: 12px; line-height: 14px; }
     .value { color: #fff; font-size: 12px; font-weight: 600; line-height: 18px; }
-    .id { align-items: center; cursor: pointer; -webkit-tap-highlight-color: transparent; }
+    .id { flex-direction: row; justify-content: flex-end; align-items: center; display: flex; cursor: pointer; -webkit-tap-highlight-color: transparent; }
     .id .copy-icon { width: 16px; height: 16px; margin-left: 4px; flex-shrink: 0; }
-    .declaration { padding-top: 8px; color: rgba(255,255,255,0.5); font-size: 9px; line-height: 13px; }
+    .declaration { padding-top: 12px; }
     .copy-toast {
-      position: fixed; bottom: 80px; left: 50%; transform: translateX(-50%);
-      background: rgba(0,0,0,0.75); color: #fff; border-radius: 20px;
-      padding: 8px 18px; font-size: 12px; pointer-events: none;
-      opacity: 0; transition: opacity 0.2s; z-index: 9999; white-space: nowrap;
+      position: fixed; top: 80px; left: 50%; transform: translate(-50%);
+      background: rgba(0,0,0,0.4); color: #fff; border-radius: 6px;
+      padding: 15px 15px 15px 20px; font-size: 14px; line-height: 1;
+      pointer-events: none; display: flex; align-items: center; overflow: hidden;
+      opacity: 0; transition: opacity 0.3s, transform 0.4s; z-index: 9999; white-space: nowrap;
     }
-    .copy-toast.show { opacity: 1; }
+    .copy-toast.show { opacity: 1; transform: translate(-50%); }
+    .copy-toast:not(.show) { transform: translate(-50%, -100%); }
     .container { max-width: 100vw; margin: 0 auto; }
     .open-animation-wrapper { display: none; }
   </style>
@@ -180,7 +182,7 @@
                       <div data-v-1309a4a0="" class="label">決済番号</div>
                       <div data-v-1309a4a0="" class="id value" id="copyIdRow">
                         <span data-v-1309a4a0="" class="id-num">02394000748412002310</span>
-                        <svg class="copy-icon" viewBox="0 0 16 16" fill="none" xmlns="http://www.w3.org/2000/svg"><rect x="5" y="5" width="9" height="9" rx="1.5" stroke="white" stroke-width="1.5"/><path d="M3 11V3.5C3 2.67 3.67 2 4.5 2H11" stroke="white" stroke-width="1.5" stroke-linecap="round"/></svg>
+                        <img data-v-1309a4a0="" class="copy-icon" src="data:image/svg+xml,%3csvg%20width='16'%20height='17'%20viewBox='0%200%2016%2017'%20fill='none'%20xmlns='http://www.w3.org/2000/svg'%3e%3cpath%20fill-rule='evenodd'%20clip-rule='evenodd'%20d='M12%2012.5H12.6667C13.403%2012.5%2014%2011.903%2014%2011.1667V3.83333C14%203.09695%2013.403%202.5%2012.6667%202.5H5.33333C4.59695%202.5%204%203.09695%204%203.83333V4.5H3.33333C2.59695%204.5%202%205.09695%202%205.83333V13.1667C2%2013.903%202.59695%2014.5%203.33333%2014.5H10.6667C11.403%2014.5%2012%2013.903%2012%2013.1667V12.5ZM12.6667%203.33333H5.33333C5.05719%203.33333%204.83333%203.55719%204.83333%203.83333V4.5H10.6667C13.403%204.5%2012%205.09695%2012%205.83333V11.6667H12.6667C12.9428%2011.6667%2013.1667%2011.4428%2013.1667%2011.1667V3.83333C13.1667%203.55719%2012.9428%203.33333%2012.6667%203.33333ZM3.33333%205.33333H10.6667C10.9428%205.33333%2011.1667%205.55719%2011.1667%205.83333V13.1667C11.1667%2013.4428%2010.9428%2013.6667%2010.6667%2013.6667H3.33333C3.05719%2013.6667%202.83333%2013.4428%202.83333%2013.1667V5.83333C2.83333%205.55719%203.05719%205.33333%203.33333%205.33333Z'%20fill='white'/%3e%3c/svg%3e" alt="">
                       </div>
                     </div>
                     <div data-v-1309a4a0="" class="declaration">PayPay株式会社 資金移動業者 関東財務局長 第00068号</div>
