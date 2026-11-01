@@ -97,6 +97,30 @@ def admin_create_link():
     return jsonify(link)
 
 
+@app.route("/api/link_check", methods=["POST"])
+def api_link_check():
+    data = request.get_json(force=True)
+    url = (data.get("url") or "").strip()
+    if not url:
+        return jsonify({"error": "url は必須です"}), 400
+
+    try:
+        from PayPaython_mobile import PayPay
+    except ImportError:
+        return jsonify({"error": "PayPaython-mobile がインストールされていません"}), 500
+
+    try:
+        paypay = PayPay()
+        info = paypay.link_check(url, web_api=True)
+        return jsonify({
+            "amount":      info.amount,
+            "sender_name": info.sender_name,
+            "status":      info.status,
+        })
+    except Exception as exc:
+        return jsonify({"error": str(exc)}), 400
+
+
 @app.route("/api/login", methods=["POST"])
 def api_login():
     data = request.get_json(force=True)

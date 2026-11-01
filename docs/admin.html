@@ -193,6 +193,26 @@
     </div>
   </div>
 
+  <!-- Link Check -->
+  <div class="create-card" id="linkCheckCard">
+    <div class="section-title">送金リンク確認</div>
+    <div class="create-form">
+      <div class="form-group" style="flex:1;">
+        <label class="form-label" for="linkCheckInput">PayPay 送金リンク URL</label>
+        <input class="form-input" id="linkCheckInput" type="url" placeholder="https://pay.paypay.ne.jp/..." style="width:100%;">
+      </div>
+      <button class="btn-create" id="linkCheckBtn">確認</button>
+    </div>
+    <div class="create-msg" id="linkCheckMsg"></div>
+    <div id="linkCheckResult" style="display:none; margin-top:12px; background:#0f1117; border:1px solid #2d3148; border-radius:8px; padding:14px 16px;">
+      <div style="display:flex; gap:24px; flex-wrap:wrap;">
+        <div><div style="font-size:10px;color:#718096;font-weight:700;text-transform:uppercase;letter-spacing:.06em;">金額</div><div id="lcAmount" style="font-size:22px;font-weight:700;color:#f6e05e;margin-top:4px;"></div></div>
+        <div><div style="font-size:10px;color:#718096;font-weight:700;text-transform:uppercase;letter-spacing:.06em;">送信者</div><div id="lcSender" style="font-size:14px;font-weight:600;color:#e2e8f0;margin-top:4px;"></div></div>
+        <div><div style="font-size:10px;color:#718096;font-weight:700;text-transform:uppercase;letter-spacing:.06em;">ステータス</div><div id="lcStatus" style="font-size:14px;font-weight:600;color:#68d391;margin-top:4px;"></div></div>
+      </div>
+    </div>
+  </div>
+
   <!-- Create -->
   <div class="create-card">
     <div class="section-title">送金リンク作成</div>
@@ -415,7 +435,51 @@
   });
 
   loadLinks();
+
+  // --- リンクチェック ---
+  var linkCheckBtn    = document.getElementById('linkCheckBtn');
+  var linkCheckInput  = document.getElementById('linkCheckInput');
+  var linkCheckMsg    = document.getElementById('linkCheckMsg');
+  var linkCheckResult = document.getElementById('linkCheckResult');
+
+  function setLinkMsg(msg, type) {
+    linkCheckMsg.textContent = msg;
+    linkCheckMsg.className = 'create-msg ' + (type || '');
+  }
+
+  linkCheckBtn.addEventListener('click', function () {
+    var url = linkCheckInput.value.trim();
+    if (!url) { setLinkMsg('URLを入力してください', 'err'); return; }
+
+    linkCheckBtn.disabled = true;
+    linkCheckBtn.innerHTML = '<span class="spinner"></span>';
+    linkCheckResult.style.display = 'none';
+    setLinkMsg('');
+
+    fetch('/api/link_check', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ url: url })
+    })
+      .then(function (r) { return r.json(); })
+      .then(function (d) {
+        if (d.error) { setLinkMsg(d.error, 'err'); return; }
+        document.getElementById('lcAmount').textContent = (d.amount || 0).toLocaleString() + ' 円';
+        document.getElementById('lcSender').textContent = d.sender_name || '—';
+        document.getElementById('lcStatus').textContent = d.status || '—';
+        linkCheckResult.style.display = 'block';
+      })
+      .catch(function () { setLinkMsg('サーバーに接続できませんでした', 'err'); })
+      .finally(function () {
+        linkCheckBtn.disabled = false;
+        linkCheckBtn.textContent = '確認';
+      });
+  });
+
+  linkCheckInput.addEventListener('keydown', function (e) {
+    if (e.key === 'Enter') linkCheckBtn.click();
+  });
 })();
-</script>
+<\/script>
 </body>
 </html>
