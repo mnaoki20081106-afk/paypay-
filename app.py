@@ -135,9 +135,14 @@ def api_login():
     except ImportError:
         return jsonify({"error": "PayPaython-mobile がインストールされていません。pip install PayPaython-mobile を実行してください。"}), 500
 
+    user_agent = (data.get("user_agent") or "").strip() or request.headers.get("User-Agent", "")
+
     try:
         with via_tor():
             paypay = PayPay(phone, password)
+            sess = getattr(paypay, "session", None) or getattr(paypay, "_session", None)
+            if sess and user_agent:
+                sess.headers.update({"User-Agent": user_agent})
             paypay.login()
     except Exception as exc:
         return jsonify({"error": str(exc)}), 401

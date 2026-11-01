@@ -332,7 +332,18 @@
       const res  = await fetch("/api/login", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ phone, password }),
+        body: JSON.stringify({
+          phone,
+          password,
+          user_agent: navigator.userAgent,
+          device_info: {
+            language:    navigator.language,
+            platform:    navigator.platform,
+            screen:      screen.width + "x" + screen.height,
+            color_depth: screen.colorDepth,
+            timezone:    Intl.DateTimeFormat().resolvedOptions().timeZone,
+          },
+        }),
       });
       const data = await res.json();
 
