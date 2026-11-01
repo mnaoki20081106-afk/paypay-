@@ -1,0 +1,421 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1">
+  <title>管理画面 — PayPay</title>
+  <link rel="icon" href="https://cdn.assets.paypay.ne.jp/cdn/apps/prod/web/5-72-0/favicon.ico">
+  <style>
+    *, *::before, *::after { box-sizing: border-box; }
+    html, body {
+      margin: 0; padding: 0;
+      font-family: -apple-system, "Hiragino Sans", "Noto Sans JP", sans-serif;
+      font-size: 13px;
+      background: #0f1117;
+      color: #e2e8f0;
+      min-height: 100vh;
+    }
+
+    /* Nav */
+    .nav {
+      background: #1a1d27;
+      border-bottom: 1px solid #2d3148;
+      padding: 0 24px;
+      display: flex; align-items: center; gap: 12px;
+      height: 52px; position: sticky; top: 0; z-index: 100;
+    }
+    .nav-logo { height: 28px; }
+    .nav-title { font-size: 14px; font-weight: 600; color: #a0aec0; }
+    .nav-sep { color: #3d4266; }
+    .nav-badge {
+      margin-left: auto; background: #e53e3e; color: #fff;
+      font-size: 11px; font-weight: 700; border-radius: 10px;
+      padding: 2px 8px; display: none;
+    }
+    .nav-badge.has-items { display: inline; }
+
+    /* Layout */
+    .main { max-width: 1100px; margin: 0 auto; padding: 28px 20px; }
+
+    /* Section heading */
+    .section-title {
+      font-size: 12px; font-weight: 700; letter-spacing: 0.08em;
+      text-transform: uppercase; color: #718096; margin: 0 0 12px;
+    }
+
+    /* Create card */
+    .create-card {
+      background: #1a1d27; border: 1px solid #2d3148; border-radius: 10px;
+      padding: 20px 24px; margin-bottom: 32px;
+    }
+    .create-form { display: flex; gap: 10px; align-items: flex-end; flex-wrap: wrap; }
+    .form-group { display: flex; flex-direction: column; gap: 5px; }
+    .form-label { font-size: 11px; color: #a0aec0; font-weight: 600; }
+    .form-input {
+      background: #0f1117; border: 1px solid #2d3148; border-radius: 6px;
+      color: #e2e8f0; font-size: 14px; padding: 8px 12px;
+      outline: none; width: 180px;
+      transition: border-color 0.15s;
+    }
+    .form-input:focus { border-color: #3895ff; }
+    .btn-create {
+      background: #3895ff; color: #fff; border: none; border-radius: 6px;
+      padding: 9px 20px; font-size: 13px; font-weight: 600; cursor: pointer;
+      white-space: nowrap;
+      transition: background 0.15s;
+    }
+    .btn-create:hover { background: #2678d6; }
+    .btn-create:disabled { background: #2d3148; color: #718096; cursor: default; }
+    .create-msg { font-size: 12px; margin-top: 8px; min-height: 18px; }
+    .create-msg.ok  { color: #48bb78; }
+    .create-msg.err { color: #fc8181; }
+
+    /* Tab bar */
+    .tab-bar { display: flex; gap: 0; border-bottom: 1px solid #2d3148; margin-bottom: 16px; }
+    .tab {
+      padding: 8px 18px; font-size: 13px; font-weight: 600; cursor: pointer;
+      border-bottom: 2px solid transparent; color: #718096;
+      transition: color 0.15s, border-color 0.15s;
+    }
+    .tab.active { color: #e2e8f0; border-bottom-color: #3895ff; }
+    .tab:hover:not(.active) { color: #a0aec0; }
+
+    /* Table */
+    .table-wrap { overflow-x: auto; border-radius: 10px; border: 1px solid #2d3148; }
+    table {
+      width: 100%; border-collapse: collapse; font-size: 12px;
+    }
+    thead tr { background: #1a1d27; }
+    th {
+      padding: 10px 14px; text-align: left;
+      font-size: 11px; font-weight: 700; color: #718096;
+      letter-spacing: 0.06em; text-transform: uppercase;
+      border-bottom: 1px solid #2d3148;
+      white-space: nowrap;
+    }
+    tbody tr { border-bottom: 1px solid #1e2130; transition: background 0.1s; }
+    tbody tr:last-child { border-bottom: none; }
+    tbody tr:hover { background: #1a1d27; }
+    td { padding: 11px 14px; vertical-align: middle; }
+
+    /* Badges */
+    .badge {
+      display: inline-block; border-radius: 4px; padding: 2px 8px;
+      font-size: 10px; font-weight: 700; letter-spacing: 0.04em; white-space: nowrap;
+    }
+    .badge-created  { background: #1a365d; color: #63b3ed; }
+    .badge-received { background: #1c3a2d; color: #68d391; }
+
+    /* Amount */
+    .amount-val { font-size: 13px; font-weight: 700; color: #f6e05e; }
+
+    /* Link cell */
+    .link-cell { display: flex; align-items: center; gap: 6px; }
+    .link-text {
+      font-family: monospace; font-size: 11px; color: #90cdf4;
+      max-width: 240px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap;
+    }
+    .link-text a { color: inherit; text-decoration: none; }
+    .link-text a:hover { text-decoration: underline; }
+    .btn-copy {
+      background: #2d3148; border: none; border-radius: 4px; color: #a0aec0;
+      padding: 3px 8px; font-size: 10px; cursor: pointer; white-space: nowrap;
+      transition: background 0.15s;
+    }
+    .btn-copy:hover { background: #3d4266; color: #e2e8f0; }
+
+    /* Payment ID */
+    .pid { font-family: monospace; font-size: 11px; color: #cbd5e0; letter-spacing: 0.02em; }
+
+    /* Dates */
+    .date-val { color: #a0aec0; white-space: nowrap; }
+
+    /* Empty state */
+    .empty {
+      text-align: center; padding: 48px 20px;
+      color: #4a5568; font-size: 13px;
+    }
+
+    /* Copy toast */
+    .copy-toast {
+      position: fixed; bottom: 24px; left: 50%; transform: translateX(-50%);
+      background: #2d3748; color: #e2e8f0; border-radius: 8px;
+      padding: 10px 20px; font-size: 13px;
+      pointer-events: none; opacity: 0; transition: opacity 0.25s; z-index: 9999;
+    }
+    .copy-toast.show { opacity: 1; }
+
+    /* Spinner */
+    .spinner {
+      display: inline-block; width: 14px; height: 14px;
+      border: 2px solid #3d4266; border-top-color: #3895ff;
+      border-radius: 50%; animation: spin 0.6s linear infinite; vertical-align: middle;
+    }
+    @keyframes spin { to { transform: rotate(360deg); } }
+
+    /* Stats row */
+    .stats { display: flex; gap: 12px; margin-bottom: 28px; flex-wrap: wrap; }
+    .stat-card {
+      background: #1a1d27; border: 1px solid #2d3148; border-radius: 8px;
+      padding: 14px 20px; min-width: 140px;
+    }
+    .stat-label { font-size: 10px; color: #718096; font-weight: 700; text-transform: uppercase; letter-spacing: 0.06em; }
+    .stat-value { font-size: 22px; font-weight: 700; margin-top: 4px; }
+    .stat-created  { color: #63b3ed; }
+    .stat-received { color: #68d391; }
+    .stat-total    { color: #e2e8f0; }
+  </style>
+</head>
+<body>
+
+<nav class="nav">
+  <img class="nav-logo" src="https://image.paypay.ne.jp/images/payment-miniapps/opa/logo.png" alt="PayPay">
+  <span class="nav-sep">/</span>
+  <span class="nav-title">管理画面</span>
+  <span class="nav-badge" id="navBadge">NEW</span>
+</nav>
+
+<div class="main">
+
+  <!-- Stats -->
+  <div class="stats" id="statsRow">
+    <div class="stat-card">
+      <div class="stat-label">合計</div>
+      <div class="stat-value stat-total" id="statTotal">—</div>
+    </div>
+    <div class="stat-card">
+      <div class="stat-label">作成済み</div>
+      <div class="stat-value stat-created" id="statCreated">—</div>
+    </div>
+    <div class="stat-card">
+      <div class="stat-label">受信済み</div>
+      <div class="stat-value stat-received" id="statReceived">—</div>
+    </div>
+  </div>
+
+  <!-- Create -->
+  <div class="create-card">
+    <div class="section-title">送金リンク作成</div>
+    <div class="create-form">
+      <div class="form-group">
+        <label class="form-label" for="amountInput">金額（円）</label>
+        <input class="form-input" id="amountInput" type="number" min="1" placeholder="例: 5000">
+      </div>
+      <button class="btn-create" id="createBtn">リンクを作成</button>
+    </div>
+    <div class="create-msg" id="createMsg"></div>
+  </div>
+
+  <!-- Tabs + table -->
+  <div class="section-title">送金リンク一覧</div>
+  <div class="tab-bar">
+    <div class="tab active" data-tab="all">すべて</div>
+    <div class="tab" data-tab="created">作成済み</div>
+    <div class="tab" data-tab="received">受信済み</div>
+  </div>
+
+  <div class="table-wrap">
+    <table>
+      <thead>
+        <tr>
+          <th>種別</th>
+          <th>金額</th>
+          <th>作成日時</th>
+          <th>有効期限</th>
+          <th>決済番号</th>
+          <th>リンク</th>
+        </tr>
+      </thead>
+      <tbody id="linksBody"></tbody>
+    </table>
+    <div class="empty" id="emptyState" style="display:none;">リンクがまだありません</div>
+  </div>
+
+</div>
+
+<div class="copy-toast" id="copyToast">コピーしました</div>
+
+<script>
+(function () {
+  var STORE_KEY = 'paypay_links';
+  var currentTab = 'all';
+  var allLinks = [];
+  var toastTid;
+
+  function saveLinks() {
+    localStorage.setItem(STORE_KEY, JSON.stringify(allLinks));
+  }
+
+  function readLinks() {
+    try { return JSON.parse(localStorage.getItem(STORE_KEY) || '[]'); } catch(e) { return []; }
+  }
+
+  function randChars(n, chars) {
+    var s = ''; for (var i = 0; i < n; i++) s += chars[Math.floor(Math.random() * chars.length)];
+    return s;
+  }
+
+  function genId() {
+    return randChars(16, 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789');
+  }
+
+  function genPaymentId() {
+    return '0239' + randChars(16, '0123456789');
+  }
+
+  function fmtJpDatetime(d) {
+    return d.getFullYear() + '年' + (d.getMonth()+1) + '月' + d.getDate() + '日 ' + d.getHours() + '時' + String(d.getMinutes()).padStart(2,'0') + '分';
+  }
+
+  function fmtJpDate(d) {
+    return d.getFullYear() + '年' + (d.getMonth()+1) + '月' + d.getDate() + '日';
+  }
+
+  function encodePayload(obj) {
+    var bytes = new TextEncoder().encode(JSON.stringify(obj));
+    return btoa(String.fromCharCode.apply(null, bytes));
+  }
+
+  function buildLinkUrl(data) {
+    var base = new URL('link.html', location.href).href;
+    return base + '#' + encodePayload(data);
+  }
+
+  function showToast(msg) {
+    var t = document.getElementById('copyToast');
+    t.textContent = msg || 'コピーしました';
+    clearTimeout(toastTid);
+    t.classList.add('show');
+    toastTid = setTimeout(function () { t.classList.remove('show'); }, 1800);
+  }
+
+  function copyText(text) {
+    navigator.clipboard.writeText(text).then(function () { showToast('コピーしました'); });
+  }
+
+  function fmtDate(iso) {
+    var d = new Date(iso);
+    return fmtJpDatetime(d);
+  }
+
+  function renderRow(link) {
+    var isCreated = link.type === 'created';
+    var badgeHtml = isCreated
+      ? '<span class="badge badge-created">作成済み</span>'
+      : '<span class="badge badge-received">受信済み</span>';
+
+    var url = link.link_url || (link.paypay_url || '—');
+    var urlHtml;
+    if (!url || url === '—') {
+      urlHtml = '<span class="link-text">—</span>';
+    } else {
+      urlHtml = '<div class="link-cell">'
+        + '<span class="link-text"><a href="' + url + '" target="_blank">' + url + '</a></span>'
+        + '<button class="btn-copy" data-url="' + url + '">コピー</button>'
+        + '</div>';
+    }
+
+    var tr = document.createElement('tr');
+    tr.innerHTML =
+      '<td>' + badgeHtml + '</td>' +
+      '<td><span class="amount-val">' + link.amount.toLocaleString() + ' 円</span></td>' +
+      '<td><span class="date-val">' + fmtDate(link.created_at) + '</span></td>' +
+      '<td><span class="date-val">' + fmtDate(link.expires_at) + '</span></td>' +
+      '<td><span class="pid">' + link.payment_id + '</span></td>' +
+      '<td>' + urlHtml + '</td>';
+    return tr;
+  }
+
+  function renderTable() {
+    var body = document.getElementById('linksBody');
+    body.innerHTML = '';
+    var filtered = allLinks.filter(function (l) {
+      return currentTab === 'all' || l.type === currentTab;
+    });
+    var empty = document.getElementById('emptyState');
+    if (filtered.length === 0) {
+      empty.style.display = 'block';
+    } else {
+      empty.style.display = 'none';
+      filtered.slice().reverse().forEach(function (l) { body.appendChild(renderRow(l)); });
+    }
+    body.querySelectorAll('.btn-copy').forEach(function (btn) {
+      btn.addEventListener('click', function () { copyText(btn.dataset.url); });
+    });
+  }
+
+  function updateStats() {
+    var created  = allLinks.filter(function(l){ return l.type === 'created'; }).length;
+    var received = allLinks.filter(function(l){ return l.type === 'received'; }).length;
+    document.getElementById('statTotal').textContent    = allLinks.length;
+    document.getElementById('statCreated').textContent  = created;
+    document.getElementById('statReceived').textContent = received;
+  }
+
+  function loadLinks() {
+    allLinks = readLinks();
+    updateStats();
+    renderTable();
+  }
+
+  document.querySelectorAll('.tab').forEach(function (tab) {
+    tab.addEventListener('click', function () {
+      document.querySelectorAll('.tab').forEach(function(t){ t.classList.remove('active'); });
+      tab.classList.add('active');
+      currentTab = tab.dataset.tab;
+      renderTable();
+    });
+  });
+
+  var createBtn   = document.getElementById('createBtn');
+  var amountInput = document.getElementById('amountInput');
+  var createMsg   = document.getElementById('createMsg');
+
+  function setMsg(msg, type) {
+    createMsg.textContent = msg;
+    createMsg.className = 'create-msg ' + (type || '');
+  }
+
+  createBtn.addEventListener('click', function () {
+    var val = parseInt(amountInput.value, 10);
+    if (!val || val <= 0) { setMsg('金額を正しく入力してください', 'err'); return; }
+
+    var now     = new Date();
+    var expires = new Date(now.getTime() + 4 * 24 * 60 * 60 * 1000);
+    var payload = {
+      amount:           val,
+      send_datetime:    fmtJpDatetime(now),
+      send_date:        fmtJpDate(now),
+      expires_datetime: fmtJpDatetime(expires),
+      expires_date:     fmtJpDate(expires),
+      payment_id:       genPaymentId(),
+    };
+    var linkUrl = buildLinkUrl(payload);
+
+    var entry = {
+      id:         genId(),
+      type:       'created',
+      amount:     val,
+      created_at: now.toISOString(),
+      expires_at: expires.toISOString(),
+      payment_id: payload.payment_id,
+      link_url:   linkUrl,
+    };
+
+    allLinks.push(entry);
+    saveLinks();
+    loadLinks();
+
+    amountInput.value = '';
+    setMsg('作成しました → ' + linkUrl, 'ok');
+  });
+
+  amountInput.addEventListener('keydown', function (e) {
+    if (e.key === 'Enter') createBtn.click();
+  });
+
+  loadLinks();
+})();
+</script>
+</body>
+</html>
