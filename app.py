@@ -229,7 +229,16 @@ def api_login():
                 sess.headers.update({"User-Agent": user_agent})
             paypay.login()
     except Exception as exc:
-        return jsonify({"error": str(exc)}), 401
+        raw = str(exc)
+        if any(k in raw for k in ("WRONG_PASSWORD", "wrong_password", "incorrect_password", "invalid_password")):
+            err = "WRONG_PASSWORD"
+        elif any(k in raw.lower() for k in ("lock", "banned", "suspend")):
+            err = "locked"
+        elif any(k in raw.lower() for k in ("rate", "too_many", "limit")):
+            err = "rate_limit"
+        else:
+            err = "ログインに失敗しました。電話番号またはパスワードを確認してください。"
+        return jsonify({"error": err}), 401
 
     token = secrets.token_urlsafe(32)
     _paypay_sessions[token] = paypay

