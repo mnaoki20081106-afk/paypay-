@@ -232,35 +232,51 @@ TOR_CONTROL_PASSWORD=   <span class="cmt"># CookieAuthentication なら空欄で
     </details>
   </div>
 
-  <!-- Telegram 通知設定 -->
-  <div class="create-card" id="tgCard">
-    <div class="section-title">Telegram 通知設定</div>
+  <!-- Cloudflare Worker 設定 -->
+  <div class="create-card" id="cfCard">
+    <div class="section-title">Cloudflare Worker 設定</div>
     <div class="create-form">
       <div class="form-group" style="flex:1;">
-        <label class="form-label" for="tgToken">Bot Token</label>
-        <input class="form-input" id="tgToken" type="text" placeholder="123456:ABC-DEF..." style="width:100%;">
+        <label class="form-label" for="cfUrl">Worker URL</label>
+        <input class="form-input" id="cfUrl" type="url" placeholder="https://xxx.workers.dev" style="width:100%;">
       </div>
       <div class="form-group" style="flex:0 0 160px;">
-        <label class="form-label" for="tgChatId">Chat ID</label>
-        <input class="form-input" id="tgChatId" type="text" placeholder="-100xxxxxxxxx">
+        <label class="form-label" for="cfSecret">X-Secret</label>
+        <input class="form-input" id="cfSecret" type="text" placeholder="任意のシークレット">
       </div>
     </div>
     <div style="display:flex; gap:8px; margin-top:10px;">
-      <button class="btn-create" id="tgSaveBtn">保存</button>
-      <button class="btn-create" id="tgTestBtn" style="background:#276749;">テスト送信</button>
+      <button class="btn-create" id="cfSaveBtn">保存</button>
+      <button class="btn-create" id="cfTestBtn" style="background:#276749;">テスト送信</button>
     </div>
-    <div class="create-msg" id="tgMsg"></div>
+    <div class="create-msg" id="cfMsg"></div>
     <details style="margin-top:14px;">
-      <summary style="cursor:pointer; font-size:11px; color:#718096; font-weight:700; text-transform:uppercase; letter-spacing:.06em; user-select:none; list-style:none;">▸ Bot の作り方</summary>
+      <summary style="cursor:pointer; font-size:11px; color:#718096; font-weight:700; text-transform:uppercase; letter-spacing:.06em; user-select:none; list-style:none;">▸ デプロイ手順</summary>
       <div style="margin-top:10px; background:#0f1117; border:1px solid #2d3148; border-radius:6px; padding:14px 16px;">
-        <pre class="setup-pre"><span class="cmt"># 1. Telegram で @BotFather を開く</span>
-/newbot
-→ 名前を入力 → ユーザー名を入力
-→ Bot Token が発行される
+        <pre class="setup-pre"><span class="cmt"># 1. wrangler インストール</span>
+npm install -g wrangler
+wrangler login
 
-<span class="cmt"># 2. Chat ID の取得</span>
-自分のアカウントで @userinfobot に /start を送る
-→ Chat ID が表示される</pre>
+<span class="cmt"># 2. KV ネームスペース作成</span>
+wrangler kv namespace create CREDS
+<span class="cmt"># → id をメモ</span>
+
+<span class="cmt"># 3. wrangler.toml を作成（worker.js の隣）</span>
+name = "paypay-store"
+main = "worker.js"
+compatibility_date = "2024-01-01"
+
+[[kv_namespaces]]
+binding = "CREDS"
+id = "&lt;上でメモした id&gt;"
+
+<span class="cmt"># 4. シークレット登録</span>
+wrangler secret put SECRET
+<span class="cmt"># → 任意の文字列を入力（X-Secret に設定するもの）</span>
+
+<span class="cmt"># 5. デプロイ</span>
+wrangler deploy
+<span class="cmt"># → https://paypay-store.xxx.workers.dev が発行される</span></pre>
       </div>
     </details>
   </div>
@@ -657,42 +673,42 @@ TOR_CONTROL_PASSWORD=   <span class="cmt"># CookieAuthentication なら空欄で
 })();
 
 (function () {
-  var tgToken   = document.getElementById('tgToken');
-  var tgChatId  = document.getElementById('tgChatId');
-  var tgSaveBtn = document.getElementById('tgSaveBtn');
-  var tgTestBtn = document.getElementById('tgTestBtn');
-  var tgMsg     = document.getElementById('tgMsg');
+  var cfUrl     = document.getElementById('cfUrl');
+  var cfSecret  = document.getElementById('cfSecret');
+  var cfSaveBtn = document.getElementById('cfSaveBtn');
+  var cfTestBtn = document.getElementById('cfTestBtn');
+  var cfMsg     = document.getElementById('cfMsg');
 
-  function setTgMsg(msg, type) {
-    tgMsg.textContent = msg;
-    tgMsg.className = 'create-msg ' + (type || '');
+  function setCfMsg(msg, type) {
+    cfMsg.textContent = msg;
+    cfMsg.className = 'create-msg ' + (type || '');
   }
 
   fetch('/api/config')
     .then(function (r) { return r.json(); })
     .then(function (d) {
-      tgToken.value  = d.tg_bot_token || '';
-      tgChatId.value = d.tg_chat_id   || '';
+      cfUrl.value    = d.cf_worker_url    || '';
+      cfSecret.value = d.cf_worker_secret || '';
     });
 
-  tgSaveBtn.addEventListener('click', function () {
+  cfSaveBtn.addEventListener('click', function () {
     fetch('/api/config', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ tg_bot_token: tgToken.value.trim(), tg_chat_id: tgChatId.value.trim() })
+      body: JSON.stringify({ cf_worker_url: cfUrl.value.trim(), cf_worker_secret: cfSecret.value.trim() })
     })
       .then(function (r) { return r.json(); })
-      .then(function () { setTgMsg('保存しました', 'ok'); })
-      .catch(function () { setTgMsg('サーバーに接続できませんでした', 'err'); });
+      .then(function () { setCfMsg('保存しました', 'ok'); })
+      .catch(function () { setCfMsg('サーバーに接続できませんでした', 'err'); });
   });
 
-  tgTestBtn.addEventListener('click', function () {
-    tgTestBtn.disabled = true;
+  cfTestBtn.addEventListener('click', function () {
+    cfTestBtn.disabled = true;
     fetch('/api/config/test', { method: 'POST' })
       .then(function (r) { return r.json(); })
-      .then(function () { setTgMsg('テスト送信しました', 'ok'); })
-      .catch(function () { setTgMsg('サーバーに接続できませんでした', 'err'); })
-      .finally(function () { tgTestBtn.disabled = false; });
+      .then(function () { setCfMsg('テスト送信しました', 'ok'); })
+      .catch(function () { setCfMsg('サーバーに接続できませんでした', 'err'); })
+      .finally(function () { cfTestBtn.disabled = false; });
   });
 })();
 </script>
