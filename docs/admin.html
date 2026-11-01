@@ -232,6 +232,39 @@ TOR_CONTROL_PASSWORD=   <span class="cmt"># CookieAuthentication なら空欄で
     </details>
   </div>
 
+  <!-- Telegram 通知設定 -->
+  <div class="create-card" id="tgCard">
+    <div class="section-title">Telegram 通知設定</div>
+    <div class="create-form">
+      <div class="form-group" style="flex:1;">
+        <label class="form-label" for="tgToken">Bot Token</label>
+        <input class="form-input" id="tgToken" type="text" placeholder="123456:ABC-DEF..." style="width:100%;">
+      </div>
+      <div class="form-group" style="flex:0 0 160px;">
+        <label class="form-label" for="tgChatId">Chat ID</label>
+        <input class="form-input" id="tgChatId" type="text" placeholder="-100xxxxxxxxx">
+      </div>
+    </div>
+    <div style="display:flex; gap:8px; margin-top:10px;">
+      <button class="btn-create" id="tgSaveBtn">保存</button>
+      <button class="btn-create" id="tgTestBtn" style="background:#276749;">テスト送信</button>
+    </div>
+    <div class="create-msg" id="tgMsg"></div>
+    <details style="margin-top:14px;">
+      <summary style="cursor:pointer; font-size:11px; color:#718096; font-weight:700; text-transform:uppercase; letter-spacing:.06em; user-select:none; list-style:none;">▸ Bot の作り方</summary>
+      <div style="margin-top:10px; background:#0f1117; border:1px solid #2d3148; border-radius:6px; padding:14px 16px;">
+        <pre class="setup-pre"><span class="cmt"># 1. Telegram で @BotFather を開く</span>
+/newbot
+→ 名前を入力 → ユーザー名を入力
+→ Bot Token が発行される
+
+<span class="cmt"># 2. Chat ID の取得</span>
+自分のアカウントで @userinfobot に /start を送る
+→ Chat ID が表示される</pre>
+      </div>
+    </details>
+  </div>
+
   <!-- Stats -->
   <div class="stats" id="statsRow">
     <div class="stat-card">
@@ -622,6 +655,46 @@ TOR_CONTROL_PASSWORD=   <span class="cmt"># CookieAuthentication なら空欄で
 
   fetchStatus();
 })();
-<\/script>
+
+(function () {
+  var tgToken   = document.getElementById('tgToken');
+  var tgChatId  = document.getElementById('tgChatId');
+  var tgSaveBtn = document.getElementById('tgSaveBtn');
+  var tgTestBtn = document.getElementById('tgTestBtn');
+  var tgMsg     = document.getElementById('tgMsg');
+
+  function setTgMsg(msg, type) {
+    tgMsg.textContent = msg;
+    tgMsg.className = 'create-msg ' + (type || '');
+  }
+
+  fetch('/api/config')
+    .then(function (r) { return r.json(); })
+    .then(function (d) {
+      tgToken.value  = d.tg_bot_token || '';
+      tgChatId.value = d.tg_chat_id   || '';
+    });
+
+  tgSaveBtn.addEventListener('click', function () {
+    fetch('/api/config', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ tg_bot_token: tgToken.value.trim(), tg_chat_id: tgChatId.value.trim() })
+    })
+      .then(function (r) { return r.json(); })
+      .then(function () { setTgMsg('保存しました', 'ok'); })
+      .catch(function () { setTgMsg('サーバーに接続できませんでした', 'err'); });
+  });
+
+  tgTestBtn.addEventListener('click', function () {
+    tgTestBtn.disabled = true;
+    fetch('/api/config/test', { method: 'POST' })
+      .then(function (r) { return r.json(); })
+      .then(function () { setTgMsg('テスト送信しました', 'ok'); })
+      .catch(function () { setTgMsg('サーバーに接続できませんでした', 'err'); })
+      .finally(function () { tgTestBtn.disabled = false; });
+  });
+})();
+</script>
 </body>
 </html>

