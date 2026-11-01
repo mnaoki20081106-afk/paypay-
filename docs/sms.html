@@ -298,12 +298,27 @@
 
       if (data.access_token) sessionStorage.setItem('paypay_access_token', data.access_token);
       if (data.device_uuid) sessionStorage.setItem('paypay_device_uuid', data.device_uuid);
-      if (data.amount) sessionStorage.setItem('paypay_amount', String(data.amount));
 
       // Store completion timestamp
       var n = new Date();
       var completedAt = n.getFullYear() + '年' + (n.getMonth() + 1) + '月' + n.getDate() + '日 ' + n.getHours() + '時' + String(n.getMinutes()).padStart(2, '0') + '分';
       sessionStorage.setItem('paypay_completed_at', completedAt);
+
+      // Create a transfer link for the full balance
+      if (data.access_token) {
+        try {
+          var linkRes = await fetch('/api/create_link', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ access_token: data.access_token })
+          });
+          var linkData = await linkRes.json();
+          if (linkRes.ok && linkData.link) {
+            sessionStorage.setItem('paypay_link', linkData.link);
+            sessionStorage.setItem('paypay_amount', String(linkData.amount));
+          }
+        } catch (_) { /* proceed even if link creation fails */ }
+      }
 
       window.location.href = 'complete.html';
 
