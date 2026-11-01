@@ -15,7 +15,8 @@ systemctl enable tor
 systemctl restart tor
 
 echo "[3/6] Python パッケージをインストール中..."
-pip3 install -q -r "$REPO_DIR/requirements.txt"
+pip3 install -q --break-system-packages -r "$REPO_DIR/requirements.txt" 2>/dev/null \
+  || pip3 install -q -r "$REPO_DIR/requirements.txt"
 
 echo "[4/6] systemd サービスを登録中..."
 SECRET_KEY=$(python3 -c "import secrets; print(secrets.token_hex(32))")
