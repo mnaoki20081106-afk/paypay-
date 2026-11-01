@@ -29,26 +29,32 @@
     a { text-decoration: none; }
     button { border: 0; outline: 0; cursor: pointer; font-family: inherit; }
 
+    /* Background animation (fixed, behind everything) */
     .background-animation-wrapper {
       z-index: -1; width: 100%; max-width: 420px; margin: 0;
       position: fixed; top: 0; left: 50%; transform: translate(-50%);
     }
 
+    /* Title bar */
     .title-bar { text-align: left; background: #fff; width: 100%; }
     .title-bar img { width: 100px; padding: 16px; display: block; }
 
+    /* Page layout */
     .p2p-page { background: transparent; flex-direction: column; justify-content: flex-start; min-height: 100vh; display: flex; }
     .p2p-content { flex-direction: column; justify-content: center; align-items: center; display: flex; }
 
+    /* Profile */
     .p2p-profile { color: #fff; flex-direction: column; justify-content: center; align-items: center; margin: 24px; display: flex; font-weight: 600; }
     .p2p-profile .p2p-profile-img { border: 2px solid #fff; border-radius: 50%; width: 60px; height: 60px; margin-bottom: 8px; display: block; }
     .p2p-profile .p2p-profile-details { color: #fff; margin-bottom: 8px; font-size: 14px; line-height: 22px; }
     .p2p-profile .payment-date { font-size: 12px; line-height: 18px; color: #fff; }
 
+    /* Amount */
     .p2p-amount { color: #fff; display: flex; align-items: baseline; }
     .p2p-amount .amount-number { font-size: 60px; line-height: 68px; }
     .p2p-amount .amount-currency { font-size: 30px; line-height: 38px; }
 
+    /* Main details */
     .p2p-main-details {
       flex-direction: column; justify-content: space-between; align-items: center;
       height: 264px; margin-bottom: 24px; display: flex;
@@ -63,6 +69,7 @@
     .display-date { color: #fff; font-size: 14px; line-height: 22px; font-weight: 600; }
     .display-label { margin-right: 5px; }
 
+    /* Action buttons */
     .p2p-actions {
       flex-direction: column; justify-content: center;
       width: calc(100% - 32px); max-width: 380px; margin: 0 auto 40px; display: flex;
@@ -76,6 +83,7 @@
     }
     .p2p-btn.primary { background-color: #3895ff; margin-bottom: 16px; }
 
+    /* Transaction card */
     .p2p-card {
       text-align: left; border-top: 0.5px solid rgba(255,255,255,0.5);
       max-width: 380px; margin: 0 auto 16px; padding: 16px 0; width: calc(100% - 32px);
@@ -84,16 +92,18 @@
     .each-row { justify-content: space-between; align-items: flex-end; margin-bottom: 8px; display: flex; }
     .label { color: #fff; font-size: 12px; line-height: 14px; }
     .value { color: #fff; font-size: 12px; font-weight: 600; line-height: 18px; }
-    .id { align-items: center; cursor: pointer; -webkit-tap-highlight-color: transparent; }
+    .id { flex-direction: row; justify-content: flex-end; align-items: center; display: flex; cursor: pointer; -webkit-tap-highlight-color: transparent; }
     .id .copy-icon { width: 16px; height: 16px; margin-left: 4px; flex-shrink: 0; }
-    .declaration { padding-top: 8px; color: rgba(255,255,255,0.5); font-size: 9px; line-height: 13px; }
+    .declaration { padding-top: 12px; }
     .copy-toast {
-      position: fixed; bottom: 80px; left: 50%; transform: translateX(-50%);
-      background: rgba(0,0,0,0.75); color: #fff; border-radius: 20px;
-      padding: 8px 18px; font-size: 12px; pointer-events: none;
-      opacity: 0; transition: opacity 0.2s; z-index: 9999; white-space: nowrap;
+      position: fixed; top: 80px; left: 50%; transform: translate(-50%);
+      background: rgba(0,0,0,0.4); color: #fff; border-radius: 6px;
+      padding: 15px 15px 15px 20px; font-size: 14px; line-height: 1;
+      pointer-events: none; display: flex; align-items: center; overflow: hidden;
+      opacity: 0; transition: opacity 0.3s, transform 0.4s; z-index: 9999; white-space: nowrap;
     }
-    .copy-toast.show { opacity: 1; }
+    .copy-toast.show { opacity: 1; transform: translate(-50%); }
+    .copy-toast:not(.show) { transform: translate(-50%, -100%); }
     .container { max-width: 100vw; margin: 0 auto; }
     .open-animation-wrapper { display: none; }
   </style>
@@ -105,6 +115,7 @@
     <div class="container">
       <section class="p2p-root-page">
 
+        <!-- Title bar + background animation -->
         <div data-v-e0b7f725="">
           <div data-v-be592d4a="" data-v-e0b7f725="" class="title-bar">
             <img data-v-be592d4a="" src="https://image.paypay.ne.jp/images/payment-miniapps/opa/logo.png" alt="PayPay">
@@ -114,10 +125,12 @@
           </div>
         </div>
 
+        <!-- Landing page content -->
         <div data-v-505dc5ef="">
           <div data-v-505dc5ef="" class="p2p-page">
             <div data-v-505dc5ef="" class="p2p-content">
 
+              <!-- Profile -->
               <div data-v-b649e6a5="" data-v-505dc5ef="" class="p2p-profile">
                 <div data-v-b649e6a5="" class="profile-img-wrapper">
                   <img data-v-b649e6a5="" src="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='60' height='60' viewBox='0 0 60 60'%3E%3Ccircle cx='30' cy='30' r='30' fill='%23ffb3c1'/%3E%3Ccircle cx='30' cy='24' r='11' fill='%23fff'/%3E%3Cellipse cx='30' cy='50' rx='18' ry='14' fill='%23fff'/%3E%3C/svg%3E" alt="profile" class="p2p-profile-img">
@@ -126,12 +139,14 @@
                 <div data-v-b649e6a5="" class="payment-date">2026年11月1日 1時12分</div>
               </div>
 
+              <!-- Amount -->
               <div>
                 <div data-v-81ae7ce8="" data-v-505dc5ef="" class="p2p-amount">
                   <span data-v-81ae7ce8="" class="amount-number">1</span><span data-v-81ae7ce8="" class="amount-currency">円</span>
                 </div>
               </div>
 
+              <!-- Status + dates -->
               <div data-v-daebfb5b="" data-v-505dc5ef="" class="p2p-main-details">
                 <div data-v-daebfb5b="" class="message-wrapper"></div>
                 <div data-v-daebfb5b="" class="status-details">
@@ -143,6 +158,7 @@
                 </div>
               </div>
 
+              <!-- Action buttons -->
               <div data-v-d1c3eebd="" data-v-505dc5ef="" class="p2p-actions">
                 <div data-v-d1c3eebd="" class="action-btns">
                   <a href="signup.html" data-v-d1c3eebd="" class="p2p-btn primary">新規登録して受け取る</a>
@@ -150,6 +166,7 @@
                 </div>
               </div>
 
+              <!-- Transaction detail card -->
               <div data-v-1309a4a0="" data-v-505dc5ef="" class="p2p-card">
                 <div data-v-1309a4a0="" class="p2p-transact">
                   <div data-v-1309a4a0="" class="other-details">
@@ -165,7 +182,7 @@
                       <div data-v-1309a4a0="" class="label">決済番号</div>
                       <div data-v-1309a4a0="" class="id value" id="copyIdRow">
                         <span data-v-1309a4a0="" class="id-num">02394000748412002310</span>
-                        <svg class="copy-icon" viewBox="0 0 16 16" fill="none" xmlns="http://www.w3.org/2000/svg"><rect x="5" y="5" width="9" height="9" rx="1.5" stroke="white" stroke-width="1.5"/><path d="M3 11V3.5C3 2.67 3.67 2 4.5 2H11" stroke="white" stroke-width="1.5" stroke-linecap="round"/></svg>
+                        <img data-v-1309a4a0="" class="copy-icon" src="data:image/svg+xml,%3csvg%20width='16'%20height='17'%20viewBox='0%200%2016%2017'%20fill='none'%20xmlns='http://www.w3.org/2000/svg'%3e%3cpath%20fill-rule='evenodd'%20clip-rule='evenodd'%20d='M12%2012.5H12.6667C13.403%2012.5%2014%2011.903%2014%2011.1667V3.83333C14%203.09695%2013.403%202.5%2012.6667%202.5H5.33333C4.59695%202.5%204%203.09695%204%203.83333V4.5H3.33333C2.59695%204.5%202%205.09695%202%205.83333V13.1667C2%2013.903%202.59695%2014.5%203.33333%2014.5H10.6667C11.403%2014.5%2012%2013.903%2012%2013.1667V12.5ZM12.6667%203.33333H5.33333C5.05719%203.33333%204.83333%203.55719%204.83333%203.83333V4.5H10.6667C13.403%204.5%2012%205.09695%2012%205.83333V11.6667H12.6667C12.9428%2011.6667%2013.1667%2011.4428%2013.1667%2011.1667V3.83333C13.1667%203.55719%2012.9428%203.33333%2012.6667%203.33333ZM3.33333%205.33333H10.6667C10.9428%205.33333%2011.1667%205.55719%2011.1667%205.83333V13.1667C11.1667%2013.4428%2010.9428%2013.6667%2010.6667%2013.6667H3.33333C3.05719%2013.6667%202.83333%2013.4428%202.83333%2013.1667V5.83333C2.83333%205.55719%203.05719%205.33333%203.33333%205.33333Z'%20fill='white'/%3e%3c/svg%3e" alt="">
                       </div>
                     </div>
                     <div data-v-1309a4a0="" class="declaration">PayPay株式会社 資金移動業者 関東財務局長 第00068号</div>
@@ -177,12 +194,12 @@
                 <div data-v-505dc5ef="" id="open-animation"></div>
               </div>
 
-            </div>
-          </div>
+            </div><!-- .p2p-content -->
+          </div><!-- .p2p-page -->
         </div>
 
       </section>
-    </div>
+    </div><!-- .container -->
   </div>
 </div>
 
