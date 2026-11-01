@@ -6,7 +6,7 @@ import string
 import re
 from datetime import datetime, timedelta
 from flask import Flask, request, jsonify, send_from_directory, session, render_template
-from tor_utils import via_tor
+from tor_utils import via_tor, get_tor_enabled, set_tor_enabled, get_exit_ip, renew_tor_circuit
 
 app = Flask(__name__, static_folder="docs", template_folder="templates")
 app.secret_key = os.environ.get("SECRET_KEY", secrets.token_hex(32))
@@ -95,6 +95,32 @@ def admin_create_link():
     links.append(link)
     save_links(links)
     return jsonify(link)
+
+
+@app.route("/api/tor/status", methods=["GET"])
+def api_tor_status():
+    enabled = get_tor_enabled()
+    if enabled:
+        info = get_exit_ip()
+    else:
+        info = {"ok": False, "ip": None}
+    return jsonify({"enabled": enabled, **info})
+
+
+@app.route("/api/tor/toggle", methods=["POST"])
+def api_tor_toggle():
+    data = request.get_json(force=True)
+    set_tor_enabled(bool(data.get("enabled", True)))
+    return jsonify({"enabled": get_tor_enabled()})
+
+
+@app.route("/api/tor/renew", methods=["POST"])
+def api_tor_renew():
+    result = renew_tor_circuit()
+    if result["ok"]:
+        info = get_exit_ip()
+        return jsonify({"ok": True, **info})
+    return jsonify(result), 500
 
 
 @app.route("/api/link_check", methods=["POST"])

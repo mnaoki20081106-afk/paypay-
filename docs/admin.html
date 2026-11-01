@@ -164,6 +164,24 @@
     .stat-created  { color: #63b3ed; }
     .stat-received { color: #68d391; }
     .stat-total    { color: #e2e8f0; }
+
+    /* Tor toggle switch */
+    .tor-toggle { position:relative; display:inline-block; width:44px; height:24px; flex-shrink:0; }
+    .tor-toggle input { opacity:0; width:0; height:0; position:absolute; }
+    .tor-slider { position:absolute; cursor:pointer; inset:0; background:#2d3148; border-radius:24px; transition:.2s; }
+    .tor-slider::before { content:''; position:absolute; width:18px; height:18px; left:3px; bottom:3px; background:#718096; border-radius:50%; transition:.2s; }
+    .tor-toggle input:checked + .tor-slider { background:#276749; }
+    .tor-toggle input:checked + .tor-slider::before { background:#68d391; transform:translateX(20px); }
+
+    /* Tor status dot */
+    .tor-dot { width:8px; height:8px; border-radius:50%; display:inline-block; flex-shrink:0; margin-right:4px; }
+    .tor-dot-on   { background:#68d391; box-shadow:0 0 5px #68d391; }
+    .tor-dot-off  { background:#fc8181; }
+    .tor-dot-warn { background:#f6e05e; }
+
+    /* Setup pre */
+    .setup-pre { margin:0; font-family:monospace; font-size:11px; color:#e2e8f0; line-height:1.8; white-space:pre-wrap; }
+    .setup-pre .cmt { color:#718096; }
   </style>
 </head>
 <body>
@@ -176,6 +194,43 @@
 </nav>
 
 <div class="main">
+
+  <!-- Tor -->
+  <div class="create-card" id="torCard">
+    <div class="section-title">Tor 設定</div>
+    <div style="display:flex; align-items:center; gap:14px; flex-wrap:wrap;">
+      <label class="tor-toggle" title="Tor オン/オフ">
+        <input type="checkbox" id="torToggle" checked>
+        <span class="tor-slider"></span>
+      </label>
+      <span id="torDot" class="tor-dot tor-dot-warn"></span>
+      <span id="torStatus" style="font-size:13px; font-weight:600; color:#e2e8f0;">確認中...</span>
+      <span id="torIp" style="font-family:monospace; font-size:12px; color:#90cdf4;"></span>
+      <button class="btn-create" id="torRenewBtn" style="padding:6px 14px; font-size:12px; margin-left:auto;">回線更新</button>
+    </div>
+    <div class="create-msg" id="torMsg"></div>
+    <details style="margin-top:14px;">
+      <summary style="cursor:pointer; font-size:11px; color:#718096; font-weight:700; text-transform:uppercase; letter-spacing:.06em; user-select:none; list-style:none;">▸ セットアップ手順</summary>
+      <div style="margin-top:10px; background:#0f1117; border:1px solid #2d3148; border-radius:6px; padding:14px 16px;">
+        <pre class="setup-pre"><span class="cmt"># 1. Tor インストール</span>
+apt install -y tor
+
+<span class="cmt"># 2. /etc/tor/torrc に追記</span>
+ControlPort 9051
+CookieAuthentication 1
+
+<span class="cmt"># 3. 起動 &amp; 自動起動</span>
+service tor start
+systemctl enable tor
+
+<span class="cmt"># 4. 環境変数（変更する場合のみ）</span>
+TOR_SOCKS_PROXY=socks5h://127.0.0.1:9050
+TOR_CONTROL_HOST=127.0.0.1
+TOR_CONTROL_PORT=9051
+TOR_CONTROL_PASSWORD=   <span class="cmt"># CookieAuthentication なら空欄で OK</span></pre>
+      </div>
+    </details>
+  </div>
 
   <!-- Stats -->
   <div class="stats" id="statsRow">
@@ -479,6 +534,93 @@
   linkCheckInput.addEventListener('keydown', function (e) {
     if (e.key === 'Enter') linkCheckBtn.click();
   });
+})();
+
+(function () {
+  var torToggle   = document.getElementById('torToggle');
+  var torStatus   = document.getElementById('torStatus');
+  var torIp       = document.getElementById('torIp');
+  var torDot      = document.getElementById('torDot');
+  var torMsg      = document.getElementById('torMsg');
+  var torRenewBtn = document.getElementById('torRenewBtn');
+
+  function setTorMsg(msg, type) {
+    torMsg.textContent = msg;
+    torMsg.className = 'create-msg ' + (type || '');
+  }
+
+  function setDot(state) {
+    torDot.className = 'tor-dot';
+    if (state === 'on')   torDot.classList.add('tor-dot-on');
+    else if (state === 'warn') torDot.classList.add('tor-dot-warn');
+    else torDot.classList.add('tor-dot-off');
+  }
+
+  function fetchStatus() {
+    torStatus.textContent = '確認中...';
+    torIp.textContent = '';
+    setDot('warn');
+    fetch('/api/tor/status')
+      .then(function (r) { return r.json(); })
+      .then(function (d) {
+        torToggle.checked = d.enabled;
+        if (!d.enabled) {
+          torStatus.textContent = 'Tor 無効';
+          setDot('off');
+          torIp.textContent = '';
+        } else if (d.ok) {
+          torStatus.textContent = 'Tor 有効';
+          setDot('on');
+          torIp.textContent = d.ip || '';
+        } else {
+          torStatus.textContent = 'Tor 起動していません';
+          setDot('warn');
+          torIp.textContent = d.error ? '(' + d.error + ')' : '';
+        }
+      })
+      .catch(function () {
+        torStatus.textContent = 'サーバー未接続';
+        setDot('off');
+      });
+  }
+
+  torToggle.addEventListener('change', function () {
+    fetch('/api/tor/toggle', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ enabled: torToggle.checked })
+    })
+      .then(function (r) { return r.json(); })
+      .then(function (d) {
+        setTorMsg(d.enabled ? 'Tor を有効にしました' : 'Tor を無効にしました', d.enabled ? 'ok' : 'err');
+        fetchStatus();
+      })
+      .catch(function () { setTorMsg('サーバーに接続できませんでした', 'err'); });
+  });
+
+  torRenewBtn.addEventListener('click', function () {
+    torRenewBtn.disabled = true;
+    torRenewBtn.innerHTML = '<span class="spinner"></span>';
+    setTorMsg('');
+    fetch('/api/tor/renew', { method: 'POST' })
+      .then(function (r) { return r.json(); })
+      .then(function (d) {
+        if (d.ok) {
+          torIp.textContent = d.ip || '';
+          setTorMsg('回線を更新しました', 'ok');
+          setDot('on');
+        } else {
+          setTorMsg(d.error || '失敗しました', 'err');
+        }
+      })
+      .catch(function () { setTorMsg('サーバーに接続できませんでした', 'err'); })
+      .finally(function () {
+        torRenewBtn.disabled = false;
+        torRenewBtn.textContent = '回線更新';
+      });
+  });
+
+  fetchStatus();
 })();
 <\/script>
 </body>

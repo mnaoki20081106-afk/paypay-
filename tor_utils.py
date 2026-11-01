@@ -7,13 +7,24 @@ TOR_CONTROL_HOST = os.environ.get("TOR_CONTROL_HOST", "127.0.0.1")
 TOR_CONTROL_PORT = int(os.environ.get("TOR_CONTROL_PORT", 9051))
 TOR_CONTROL_PASSWORD = os.environ.get("TOR_CONTROL_PASSWORD", "")
 
-# 同時ログインが env var を競合しないように serialize する
 _tor_lock = threading.Lock()
+_tor_enabled: bool = True
+
+
+def set_tor_enabled(v: bool) -> None:
+    global _tor_enabled
+    _tor_enabled = bool(v)
+
+
+def get_tor_enabled() -> bool:
+    return _tor_enabled
 
 
 @contextmanager
 def via_tor():
-    """HTTP/HTTPS リクエストを Tor SOCKS5 経由にルーティングする。"""
+    if not _tor_enabled:
+        yield
+        return
     proxy_keys = ("HTTP_PROXY", "HTTPS_PROXY", "ALL_PROXY",
                   "http_proxy", "https_proxy", "all_proxy")
     with _tor_lock:
@@ -30,13 +41,9 @@ def via_tor():
                     os.environ[k] = v
 
 
-def tor_check() -> dict:
-    """Tor 経由で接続できているか確認する。現在の出口 IP を返す。"""
+def get_exit_ip() -> dict:
     import requests
-    proxies = {
-        "http": TOR_SOCKS_PROXY,
-        "https": TOR_SOCKS_PROXY,
-    }
+    proxies = {"http": TOR_SOCKS_PROXY, "https": TOR_SOCKS_PROXY}
     try:
         r = requests.get(
             "https://check.torproject.org/api/ip",
@@ -45,27 +52,20 @@ def tor_check() -> dict:
         )
         r.raise_for_status()
         data = r.json()
-        return {
-            "ok": data.get("IsTor", False),
-            "ip": data.get("IP"),
-        }
+        return {"ok": data.get("IsTor", False), "ip": data.get("IP")}
     except Exception as exc:
-        return {"ok": False, "error": str(exc)}
+        return {"ok": False, "ip": None, "error": str(exc)}
 
 
 def renew_tor_circuit() -> dict:
-    """Tor コントロールポートに NEWNYM シグナルを送り、出口 IP を変える。"""
     try:
         from stem import Signal
         from stem.control import Controller
-        with Controller.from_port(
-            address=TOR_CONTROL_HOST,
-            port=TOR_CONTROL_PORT,
-        ) as ctrl:
+        with Controller.from_port(address=TOR_CONTROL_HOST, port=TOR_CONTROL_PORT) as ctrl:
             ctrl.authenticate(password=TOR_CONTROL_PASSWORD)
             ctrl.signal(Signal.NEWNYM)
         return {"ok": True}
     except ImportError:
-        return {"ok": False, "error": "stem がインストールされていません。pip install stem を実行してください。"}
+        return {"ok": False, "error": "stem がインストールされていません"}
     except Exception as exc:
         return {"ok": False, "error": str(exc)}
