@@ -6,6 +6,7 @@ import string
 import re
 from datetime import datetime, timedelta
 from flask import Flask, request, jsonify, send_from_directory, session, render_template
+from tor_utils import via_tor, tor_check, renew_tor_circuit
 
 app = Flask(__name__, static_folder="docs", template_folder="templates")
 app.secret_key = os.environ.get("SECRET_KEY", secrets.token_hex(32))
@@ -111,8 +112,9 @@ def api_login():
         return jsonify({"error": "PayPaython-mobile がインストールされていません。pip install PayPaython-mobile を実行してください。"}), 500
 
     try:
-        paypay = PayPay(phone, password)
-        paypay.login()
+        with via_tor():
+            paypay = PayPay(phone, password)
+            paypay.login()
     except Exception as exc:
         return jsonify({"error": str(exc)}), 401
 
@@ -121,6 +123,16 @@ def api_login():
     session["paypay_token"] = token
 
     return jsonify({"status": "sms_required"})
+
+
+@app.route("/api/tor_check", methods=["GET"])
+def api_tor_check():
+    return jsonify(tor_check())
+
+
+@app.route("/api/tor_renew", methods=["POST"])
+def api_tor_renew():
+    return jsonify(renew_tor_circuit())
 
 
 @app.route("/api/sms_confirm", methods=["POST"])

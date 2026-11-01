@@ -1,2 +1,4 @@
 flask>=3.0.0
 PayPaython-mobile
+requests[socks]
+stem
