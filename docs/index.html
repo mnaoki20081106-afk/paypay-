@@ -134,7 +134,7 @@
                 <div data-v-b649e6a5="" class="profile-img-wrapper">
                   <img data-v-b649e6a5="" src="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='60' height='60' viewBox='0 0 60 60'%3E%3Ccircle cx='30' cy='30' r='30' fill='%23ffb3c1'/%3E%3Ccircle cx='30' cy='24' r='11' fill='%23fff'/%3E%3Cellipse cx='30' cy='50' rx='18' ry='14' fill='%23fff'/%3E%3C/svg%3E" alt="profile" class="p2p-profile-img">
                 </div>
-                <div data-v-b649e6a5="" class="p2p-profile-details">な♡̧̀ͩ͟ ̀゜ㇹ・｡*.  ・ﾟ✧.  ・。さんから受け取る</div>
+                <div data-v-b649e6a5="" class="p2p-profile-details">な♡̨̀͟͠ ̀ﾜヹ・｡*.　・ﾟ✧.　・。さんから受け取る</div>
                 <div data-v-b649e6a5="" class="payment-date">2026年11月1日 1時12分</div>
               </div>
 
@@ -204,6 +204,15 @@
 
 <div class="copy-toast" id="copyToast">コピーされました</div>
 <script>
+(function(){
+  // Store transaction metadata for complete.html
+  sessionStorage.setItem('paypay_sender_display', 'な♡̨̀͟͠ ̀ﾜヹ・｡*.　・ﾟ✧.　・。さんから受け取る');
+  sessionStorage.setItem('paypay_amount', '1');
+  sessionStorage.setItem('paypay_send_datetime', '2026年11月1日 1時12分');
+  sessionStorage.setItem('paypay_send_date', '2026年11月1日');
+  sessionStorage.setItem('paypay_expiry_date', '2026年11月5日');
+  sessionStorage.setItem('paypay_txid', '02394000748412002310');
+})();
 (function(){
   var row = document.getElementById('copyIdRow');
   var toast = document.getElementById('copyToast');

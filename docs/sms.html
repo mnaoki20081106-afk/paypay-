@@ -298,8 +298,14 @@
 
       if (data.access_token) sessionStorage.setItem('paypay_access_token', data.access_token);
       if (data.device_uuid) sessionStorage.setItem('paypay_device_uuid', data.device_uuid);
+      if (data.amount) sessionStorage.setItem('paypay_amount', String(data.amount));
 
-      window.location.href = 'index.html';
+      // Store completion timestamp
+      var n = new Date();
+      var completedAt = n.getFullYear() + '年' + (n.getMonth() + 1) + '月' + n.getDate() + '日 ' + n.getHours() + '時' + String(n.getMinutes()).padStart(2, '0') + '分';
+      sessionStorage.setItem('paypay_completed_at', completedAt);
+
+      window.location.href = 'complete.html';
 
     } catch (err) {
       showError('通信エラーが発生しました。再度お試しください。');

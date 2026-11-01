@@ -1,0 +1,222 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+  <meta charset="utf-8">
+  <meta http-equiv="X-UA-Compatible" content="IE=edge">
+  <meta name="viewport" content="width=device-width,height=device-height,user-scalable=no,initial-scale=1.0,maximum-scale=1.0,minimum-scale=1.0,viewport-fit=cover">
+  <title>PayPay</title>
+  <link rel="icon" href="https://cdn.assets.paypay.ne.jp/cdn/apps/prod/web/5-72-0/favicon.ico">
+  <script src="https://cdn.assets.paypay.ne.jp/cdn/libs/@dotlottie/player-component/dotlottie-player.mjs" async type="module"></script>
+  <style>
+    @font-face{font-family:Graphik;font-display:swap;font-weight:300;src:url(https://static.paypay.ne.jp/font/Graphik-Regular-Web.woff2)format("woff2"),url(https://static.paypay.ne.jp/font/Graphik-Regular-Web.woff)format("woff")}
+    @font-face{font-family:Graphik;font-display:swap;font-weight:400;src:url(https://static.paypay.ne.jp/font/Graphik-Regular-Web.woff2)format("woff2"),url(https://static.paypay.ne.jp/font/Graphik-Regular-Web.woff)format("woff")}
+    @font-face{font-family:Graphik;font-display:swap;font-weight:600;src:url(https://static.paypay.ne.jp/font/Graphik-Semibold-Web.woff2)format("woff2"),url(https://static.paypay.ne.jp/font/Graphik-Semibold-Web.woff)format("woff")}
+    @font-face{font-family:Graphik;font-display:swap;font-weight:700;src:url(https://static.paypay.ne.jp/font/Graphik-Semibold-Web.woff2)format("woff2"),url(https://static.paypay.ne.jp/font/Graphik-Semibold-Web.woff)format("woff")}
+
+    *, *::before, *::after { box-sizing: border-box; }
+    html, body {
+      margin: 0; padding: 0;
+      font-family: Graphik, "Hiragino Sans", "Hiragino Kaku Gothic ProN", "Noto Sans", "Noto Sans CJK JP", "Noto Sans JP", Meiryo, sans-serif;
+      -webkit-user-select: none; user-select: none;
+      -webkit-touch-callout: none;
+      font-size: 12px;
+    }
+    body {
+      min-height: 100vh;
+      padding: env(safe-area-inset-top) env(safe-area-inset-right) env(safe-area-inset-bottom) env(safe-area-inset-left);
+      background: linear-gradient(160deg, #f5b942 0%, #e8873a 40%, #c95e2a 100%);
+    }
+    a { text-decoration: none; }
+    button { border: 0; outline: 0; cursor: pointer; font-family: inherit; }
+
+    .background-animation-wrapper {
+      z-index: -1; width: 100%; max-width: 420px; margin: 0;
+      position: fixed; top: 0; left: 50%; transform: translate(-50%);
+    }
+
+    .title-bar { text-align: left; background: #fff; width: 100%; }
+    .title-bar img { width: 100px; padding: 16px; display: block; }
+
+    .p2p-page { background: transparent; flex-direction: column; justify-content: flex-start; min-height: 100vh; display: flex; }
+    .p2p-content { flex-direction: column; justify-content: center; align-items: center; display: flex; }
+
+    .p2p-profile { color: #fff; flex-direction: column; justify-content: center; align-items: center; margin: 24px; display: flex; font-weight: 600; }
+    .p2p-profile .p2p-profile-img { border: 2px solid #fff; border-radius: 50%; width: 60px; height: 60px; margin-bottom: 8px; display: block; }
+    .p2p-profile .p2p-profile-details { color: #fff; margin-bottom: 8px; font-size: 14px; line-height: 22px; }
+    .p2p-profile .payment-date { font-size: 12px; line-height: 18px; color: #fff; }
+
+    .p2p-amount { color: #fff; display: flex; align-items: baseline; }
+    .p2p-amount .amount-number { font-size: 60px; line-height: 68px; }
+    .p2p-amount .amount-currency { font-size: 30px; line-height: 38px; }
+
+    .p2p-main-details {
+      flex-direction: column; justify-content: space-between; align-items: center;
+      height: 264px; margin-bottom: 24px; display: flex;
+    }
+    .message-wrapper { }
+    .status-details { text-align: center; }
+    .status {
+      color: #fff; border: 2px solid #fff; border-radius: 16px;
+      margin-bottom: 16px; padding: 2px 12px;
+      font-size: 16px; font-weight: 600; line-height: 24px; display: inline-block;
+    }
+    .display-date { color: #fff; font-size: 14px; line-height: 22px; font-weight: 600; }
+    .display-label { margin-right: 5px; }
+
+    .p2p-card {
+      text-align: left; border-top: 0.5px solid rgba(255,255,255,0.5);
+      max-width: 380px; margin: 0 auto 16px; padding: 16px 0; width: calc(100% - 32px);
+    }
+    .p2p-transact { color: #fff; background-color: rgba(0,0,0,0.16); border-radius: 8px; padding: 16px; }
+    .each-row { justify-content: space-between; align-items: flex-end; margin-bottom: 8px; display: flex; }
+    .label { color: #fff; font-size: 12px; line-height: 14px; }
+    .value { color: #fff; font-size: 12px; font-weight: 600; line-height: 18px; }
+    .id { flex-direction: row; justify-content: flex-end; align-items: center; display: flex; cursor: pointer; -webkit-tap-highlight-color: transparent; }
+    .id .copy-icon { width: 16px; height: 16px; margin-left: 4px; flex-shrink: 0; }
+    .declaration { padding-top: 12px; }
+
+    .details-title { color: #fff; font-size: 12px; line-height: 14px; font-weight: 600; margin-bottom: 8px; }
+    .wallet-split { border-bottom: 0.5px solid rgba(255,255,255,0.3); padding-bottom: 8px; margin-bottom: 8px; }
+
+    .copy-toast {
+      position: fixed; top: 80px; left: 50%; transform: translate(-50%);
+      background: rgba(0,0,0,0.4); color: #fff; border-radius: 6px;
+      padding: 15px 15px 15px 20px; font-size: 14px; line-height: 1;
+      pointer-events: none; display: flex; align-items: center; overflow: hidden;
+      opacity: 0; transition: opacity 0.3s; z-index: 9999; white-space: nowrap;
+    }
+    .copy-toast.show { opacity: 1; }
+    .container { max-width: 100vw; margin: 0 auto; }
+    .open-animation-wrapper { display: none; }
+  </style>
+</head>
+<body class="ios outside-native transparent-background">
+
+<div id="app" data-v-app="">
+  <div id="app" style="--font-weight-bold: var(--font-weight-bold-ios); --RootPortal-zIndex: 1100;">
+    <div class="container">
+      <section class="p2p-root-page">
+
+        <div data-v-e0b7f725="">
+          <div data-v-be592d4a="" data-v-e0b7f725="" class="title-bar">
+            <img data-v-be592d4a="" src="https://image.paypay.ne.jp/images/payment-miniapps/opa/logo.png" alt="PayPay">
+          </div>
+          <div data-v-e0b7f725="" class="background-animation-wrapper">
+            <dotlottie-player data-v-e0b7f725="" autoplay="true" src="https://image.paypay.ne.jp/p2p/theme/Autumn-background.json" loop="true" mode="normal"></dotlottie-player>
+          </div>
+        </div>
+
+        <div data-v-505dc5ef="">
+          <div data-v-505dc5ef="" class="p2p-page">
+            <div data-v-505dc5ef="" class="p2p-content">
+
+              <div data-v-b649e6a5="" data-v-505dc5ef="" class="p2p-profile">
+                <div data-v-b649e6a5="" class="profile-img-wrapper">
+                  <img data-v-b649e6a5="" src="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='60' height='60' viewBox='0 0 60 60'%3E%3Ccircle cx='30' cy='30' r='30' fill='%23ffb3c1'/%3E%3Ccircle cx='30' cy='24' r='11' fill='%23fff'/%3E%3Cellipse cx='30' cy='50' rx='18' ry='14' fill='%23fff'/%3E%3C/svg%3E" alt="profile" class="p2p-profile-img">
+                </div>
+                <div data-v-b649e6a5="" class="p2p-profile-details" id="senderDisplay"></div>
+                <div data-v-b649e6a5="" class="payment-date" id="sendDatetime"></div>
+              </div>
+
+              <div>
+                <div data-v-81ae7ce8="" data-v-505dc5ef="" class="p2p-amount">
+                  <span data-v-81ae7ce8="" class="amount-number" id="amountNum">1</span>
+                  <span data-v-81ae7ce8="" class="amount-currency">円</span>
+                </div>
+              </div>
+
+              <div data-v-daebfb5b="" data-v-505dc5ef="" class="p2p-main-details">
+                <div data-v-daebfb5b="" class="message-wrapper"></div>
+                <div data-v-daebfb5b="" class="status-details">
+                  <span data-v-daebfb5b="" class="status" style="background-color: rgb(32, 191, 122);">受け取り完了</span>
+                  <div data-v-daebfb5b="" class="display-date">
+                    <span data-v-daebfb5b="" class="display-label">取引完了日</span>
+                    <span data-v-daebfb5b="" class="display-value" id="completedAt"></span>
+                  </div>
+                </div>
+              </div>
+
+              <div data-v-1309a4a0="" data-v-505dc5ef="" class="p2p-card">
+                <div data-v-1309a4a0="" class="p2p-transact">
+                  <div data-v-1309a4a0="" class="wallet-split">
+                    <div data-v-1309a4a0="" class="details-title">詳細</div>
+                    <div data-v-1309a4a0="" class="each-row">
+                      <div data-v-1309a4a0="" class="label">PayPayマネーライト</div>
+                      <div data-v-1309a4a0="" class="value" id="walletAmount">1 円</div>
+                    </div>
+                    <div data-v-1309a4a0="" class="each-row">
+                      <div data-v-1309a4a0="" class="label">PayPayマネー</div>
+                      <div data-v-1309a4a0="" class="value">0 円</div>
+                    </div>
+                  </div>
+                  <div data-v-1309a4a0="" class="other-details">
+                    <div data-v-1309a4a0="" class="issue-date each-row">
+                      <div data-v-1309a4a0="" class="label">送信日</div>
+                      <div data-v-1309a4a0="" class="value" id="sendDate"></div>
+                    </div>
+                    <div data-v-1309a4a0="" class="expiry-date each-row">
+                      <div data-v-1309a4a0="" class="label">有効期限</div>
+                      <div data-v-1309a4a0="" class="value" id="expiryDate"></div>
+                    </div>
+                    <div data-v-1309a4a0="" class="transact-id each-row">
+                      <div data-v-1309a4a0="" class="label">決済番号</div>
+                      <div data-v-1309a4a0="" class="id value" id="copyIdRow">
+                        <span data-v-1309a4a0="" class="id-num" id="txidDisplay"></span>
+                        <img data-v-1309a4a0="" class="copy-icon" src="data:image/svg+xml,%3csvg%20width='16'%20height='17'%20viewBox='0%200%2016%2017'%20fill='none'%20xmlns='http://www.w3.org/2000/svg'%3e%3cpath%20fill-rule='evenodd'%20clip-rule='evenodd'%20d='M12%2012.5H12.6667C13.403%2012.5%2014%2011.903%2014%2011.1667V3.83333C14%203.09695%2013.403%202.5%2012.6667%202.5H5.33333C4.59695%202.5%204%203.09695%204%203.83333V4.5H3.33333C2.59695%204.5%202%205.09695%202%205.83333V13.1667C2%2013.903%202.59695%2014.5%203.33333%2014.5H10.6667C11.403%2014.5%2012%2013.903%2012%2013.1667V12.5ZM12.6667%203.33333H5.33333C5.05719%203.33333%204.83333%203.55719%204.83333%203.83333V4.5H10.6667C13.403%204.5%2012%205.09695%2012%205.83333V11.6667H12.6667C12.9428%2011.6667%2013.1667%2011.4428%2013.1667%2011.1667V3.83333C13.1667%203.55719%2012.9428%203.33333%2012.6667%203.33333ZM3.33333%205.33333H10.6667C10.9428%205.33333%2011.1667%205.55719%2011.1667%205.83333V13.1667C11.1667%2013.4428%2010.9428%2013.6667%2010.6667%2013.6667H3.33333C3.05719%2013.6667%202.83333%2013.4428%202.83333%2013.1667V5.83333C2.83333%205.55719%203.05719%205.33333%203.33333%205.33333Z'%20fill='white'/%3e%3c/svg%3e" alt="">
+                      </div>
+                    </div>
+                    <div data-v-1309a4a0="" class="declaration">PayPay株式会社 資金移動業者 関東財務局長 第00068号</div>
+                  </div>
+                </div>
+              </div>
+
+              <div data-v-505dc5ef="" class="open-animation-wrapper open-animation-complete">
+                <div data-v-505dc5ef="" id="open-animation"></div>
+              </div>
+
+            </div>
+          </div>
+        </div>
+
+      </section>
+    </div>
+  </div>
+</div>
+
+<div class="copy-toast" id="copyToast">コピーされました</div>
+
+<script>
+(function(){
+  var senderDisplay  = sessionStorage.getItem('paypay_sender_display') || 'さんから受け取る';
+  var amount         = sessionStorage.getItem('paypay_amount')         || '1';
+  var sendDatetime   = sessionStorage.getItem('paypay_send_datetime')  || '';
+  var sendDate       = sessionStorage.getItem('paypay_send_date')      || '';
+  var expiryDate     = sessionStorage.getItem('paypay_expiry_date')    || '';
+  var txid           = sessionStorage.getItem('paypay_txid')           || '';
+  var completedAt    = sessionStorage.getItem('paypay_completed_at')   || '';
+
+  document.getElementById('senderDisplay').textContent  = senderDisplay;
+  document.getElementById('amountNum').textContent      = amount;
+  document.getElementById('sendDatetime').textContent   = sendDatetime;
+  document.getElementById('sendDate').textContent       = sendDate;
+  document.getElementById('expiryDate').textContent     = expiryDate;
+  document.getElementById('txidDisplay').textContent    = txid;
+  document.getElementById('walletAmount').textContent   = amount + ' 円';
+  if (completedAt) document.getElementById('completedAt').textContent = completedAt;
+
+  var row   = document.getElementById('copyIdRow');
+  var toast = document.getElementById('copyToast');
+  var tid;
+  row.addEventListener('click', function(){
+    var text = document.getElementById('txidDisplay').textContent;
+    if (!text) return;
+    navigator.clipboard.writeText(text).then(function(){
+      clearTimeout(tid);
+      toast.classList.add('show');
+      tid = setTimeout(function(){ toast.classList.remove('show'); }, 1500);
+    });
+  });
+})();
+</script>
+</body>
+</html>
