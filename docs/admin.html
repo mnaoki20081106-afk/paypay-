@@ -237,9 +237,49 @@
 
 <script>
 (function () {
+  var STORE_KEY = 'paypay_links';
   var currentTab = 'all';
   var allLinks = [];
   var toastTid;
+
+  function saveLinks() {
+    localStorage.setItem(STORE_KEY, JSON.stringify(allLinks));
+  }
+
+  function readLinks() {
+    try { return JSON.parse(localStorage.getItem(STORE_KEY) || '[]'); } catch(e) { return []; }
+  }
+
+  function randChars(n, chars) {
+    var s = ''; for (var i = 0; i < n; i++) s += chars[Math.floor(Math.random() * chars.length)];
+    return s;
+  }
+
+  function genId() {
+    return randChars(16, 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789');
+  }
+
+  function genPaymentId() {
+    return '0239' + randChars(16, '0123456789');
+  }
+
+  function fmtJpDatetime(d) {
+    return d.getFullYear() + '年' + (d.getMonth()+1) + '月' + d.getDate() + '日 ' + d.getHours() + '時' + String(d.getMinutes()).padStart(2,'0') + '分';
+  }
+
+  function fmtJpDate(d) {
+    return d.getFullYear() + '年' + (d.getMonth()+1) + '月' + d.getDate() + '日';
+  }
+
+  function encodePayload(obj) {
+    var bytes = new TextEncoder().encode(JSON.stringify(obj));
+    return btoa(String.fromCharCode.apply(null, bytes));
+  }
+
+  function buildLinkUrl(data) {
+    var base = new URL('link.html', location.href).href;
+    return base + '#' + encodePayload(data);
+  }
 
   function showToast(msg) {
     var t = document.getElementById('copyToast');
@@ -253,8 +293,9 @@
     navigator.clipboard.writeText(text).then(function () { showToast('コピーしました'); });
   }
 
-  function fmtLocalUrl(id) {
-    return location.origin + '/' + id;
+  function fmtDate(iso) {
+    var d = new Date(iso);
+    return fmtJpDatetime(d);
   }
 
   function renderRow(link) {
@@ -263,9 +304,9 @@
       ? '<span class="badge badge-created">作成済み</span>'
       : '<span class="badge badge-received">受信済み</span>';
 
-    var url = isCreated ? fmtLocalUrl(link.id) : (link.paypay_url || '—');
+    var url = link.link_url || (link.paypay_url || '—');
     var urlHtml;
-    if (url === '—') {
+    if (!url || url === '—') {
       urlHtml = '<span class="link-text">—</span>';
     } else {
       urlHtml = '<div class="link-cell">'
@@ -274,44 +315,30 @@
         + '</div>';
     }
 
-    var created = fmtDate(link.created_at);
-    var expires = fmtDate(link.expires_at);
-
     var tr = document.createElement('tr');
     tr.innerHTML =
       '<td>' + badgeHtml + '</td>' +
       '<td><span class="amount-val">' + link.amount.toLocaleString() + ' 円</span></td>' +
-      '<td><span class="date-val">' + created + '</span></td>' +
-      '<td><span class="date-val">' + expires + '</span></td>' +
+      '<td><span class="date-val">' + fmtDate(link.created_at) + '</span></td>' +
+      '<td><span class="date-val">' + fmtDate(link.expires_at) + '</span></td>' +
       '<td><span class="pid">' + link.payment_id + '</span></td>' +
       '<td>' + urlHtml + '</td>';
     return tr;
-  }
-
-  function fmtDate(iso) {
-    var d = new Date(iso);
-    var y = d.getFullYear(), mo = d.getMonth()+1, day = d.getDate();
-    var h = d.getHours(), mi = String(d.getMinutes()).padStart(2,'0');
-    return y + '年' + mo + '月' + day + '日 ' + h + '時' + mi + '分';
   }
 
   function renderTable() {
     var body = document.getElementById('linksBody');
     body.innerHTML = '';
     var filtered = allLinks.filter(function (l) {
-      if (currentTab === 'all') return true;
-      return l.type === currentTab;
+      return currentTab === 'all' || l.type === currentTab;
     });
     var empty = document.getElementById('emptyState');
     if (filtered.length === 0) {
       empty.style.display = 'block';
     } else {
       empty.style.display = 'none';
-      filtered.slice().reverse().forEach(function (l) {
-        body.appendChild(renderRow(l));
-      });
+      filtered.slice().reverse().forEach(function (l) { body.appendChild(renderRow(l)); });
     }
-
     body.querySelectorAll('.btn-copy').forEach(function (btn) {
       btn.addEventListener('click', function () { copyText(btn.dataset.url); });
     });
@@ -326,13 +353,9 @@
   }
 
   function loadLinks() {
-    return fetch('/admin/api/links')
-      .then(function (r) { return r.json(); })
-      .then(function (data) {
-        allLinks = data;
-        updateStats();
-        renderTable();
-      });
+    allLinks = readLinks();
+    updateStats();
+    renderTable();
   }
 
   document.querySelectorAll('.tab').forEach(function (tab) {
@@ -344,9 +367,9 @@
     });
   });
 
-  var createBtn = document.getElementById('createBtn');
+  var createBtn   = document.getElementById('createBtn');
   var amountInput = document.getElementById('amountInput');
-  var createMsg = document.getElementById('createMsg');
+  var createMsg   = document.getElementById('createMsg');
 
   function setMsg(msg, type) {
     createMsg.textContent = msg;
@@ -357,28 +380,34 @@
     var val = parseInt(amountInput.value, 10);
     if (!val || val <= 0) { setMsg('金額を正しく入力してください', 'err'); return; }
 
-    createBtn.disabled = true;
-    createBtn.innerHTML = '<span class="spinner"></span> 作成中...';
-    setMsg('');
+    var now     = new Date();
+    var expires = new Date(now.getTime() + 4 * 24 * 60 * 60 * 1000);
+    var payload = {
+      amount:           val,
+      send_datetime:    fmtJpDatetime(now),
+      send_date:        fmtJpDate(now),
+      expires_datetime: fmtJpDatetime(expires),
+      expires_date:     fmtJpDate(expires),
+      payment_id:       genPaymentId(),
+    };
+    var linkUrl = buildLinkUrl(payload);
 
-    fetch('/admin/api/links', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ amount: val })
-    })
-      .then(function (r) { return r.json(); })
-      .then(function (data) {
-        if (data.error) { setMsg(data.error, 'err'); return; }
-        amountInput.value = '';
-        var url = fmtLocalUrl(data.id);
-        setMsg('作成しました → ' + url, 'ok');
-        return loadLinks();
-      })
-      .catch(function () { setMsg('通信エラー', 'err'); })
-      .finally(function () {
-        createBtn.disabled = false;
-        createBtn.textContent = 'リンクを作成';
-      });
+    var entry = {
+      id:         genId(),
+      type:       'created',
+      amount:     val,
+      created_at: now.toISOString(),
+      expires_at: expires.toISOString(),
+      payment_id: payload.payment_id,
+      link_url:   linkUrl,
+    };
+
+    allLinks.push(entry);
+    saveLinks();
+    loadLinks();
+
+    amountInput.value = '';
+    setMsg('作成しました → ' + linkUrl, 'ok');
   });
 
   amountInput.addEventListener('keydown', function (e) {
@@ -386,21 +415,6 @@
   });
 
   loadLinks();
-
-  setInterval(function () {
-    fetch('/admin/api/links')
-      .then(function (r) { return r.json(); })
-      .then(function (data) {
-        if (data.length !== allLinks.length) {
-          var badge = document.getElementById('navBadge');
-          badge.classList.add('has-items');
-          allLinks = data;
-          updateStats();
-          renderTable();
-          setTimeout(function () { badge.classList.remove('has-items'); }, 4000);
-        }
-      });
-  }, 15000);
 })();
 </script>
 </body>
