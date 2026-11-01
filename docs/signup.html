@@ -29,17 +29,12 @@
     button { border: 0; outline: 0; cursor: pointer; font-family: inherit; }
     ul { list-style: none; margin: 0; padding: 0; }
 
-    /* Container */
     .container { max-width: 100vw; margin: 0 auto; }
-
-    /* Account root page */
     .account-root-page { }
 
-    /* Fixed header */
     .top-header { position: relative; }
     .account-header { z-index: 100; background: #fff; width: 100%; position: fixed; top: 0; }
 
-    /* Header inner — signup is pink/red gradient */
     .header-signup {
       border: 0; border-bottom: 4px solid;
       flex-direction: row; flex: 1;
@@ -53,20 +48,17 @@
     .header-signup h2 { font-size: 26px; font-weight: 400; margin: 0; line-height: 1.2; }
     .header-more { position: absolute; top: 50%; right: 15px; transform: translateY(-50%); }
 
-    /* Content area — padding-top to clear fixed header */
     .account-content {
       padding-top: 80px;
       -webkit-overflow-scrolling: touch;
       position: relative;
     }
 
-    /* Sign-up page */
     .account-signup-page {
       max-width: 440px; margin-left: auto; margin-right: auto; padding: 30px 20px;
     }
     .account-signup-page h3 { color: #444; margin-bottom: 1.5em; font-size: 1.5em; font-weight: 400; }
 
-    /* Input form shared (signin-signon) */
     .signin-signon { }
     .input-field {
       text-align: left; flex-flow: column-reverse; display: flex;
@@ -93,7 +85,6 @@
       display: flex; position: absolute; bottom: 50%; right: 0; transform: translateY(50%);
     }
 
-    /* Component icons */
     .component-icon {
       background-position: 50%; background-repeat: no-repeat; background-size: contain; display: block;
     }
@@ -102,11 +93,9 @@
 
     .password-tip { color: #969696; font-size: 11px; line-height: 16px; margin: 4px 0 0; }
 
-    /* Information content */
     .infomation-content { color: #969696; margin-top: 20px; font-size: 11px; line-height: 20px; }
     .infomation-content a { color: #3895ff; }
 
-    /* Submit button */
     .submit-button {
       color: #fff; background-color: #3895ff; border: none; border-radius: 4px;
       width: 100%; height: 45px; margin-top: 30px; font-size: 14px;
@@ -115,10 +104,8 @@
     }
     .submit-button:disabled { background-color: #e6e6e6; cursor: default; }
 
-    /* Separator */
     .separate-text { color: #242424; margin: 2em 0 1em; padding: 0 10px; font-size: 1.25em; }
 
-    /* Yahoo! JAPAN ID button */
     .yconnect-action button {
       color: #686868; background-color: #fff; border: 1px solid #ccc; border-radius: 3px;
       width: 100%; height: 44px; margin-top: 0; font-size: 14px;
@@ -131,7 +118,6 @@
     }
     .yconnect-action button span { flex: 1; text-align: center; }
 
-    /* Switch flow link */
     .switch-sign-flow {
       color: #3895ff; border-top: 1px solid #f2f2f2;
       margin-top: 60px; padding: 15px 0; font-size: 12px;
@@ -147,7 +133,6 @@
     <div class="container">
       <section data-v-32bf0b5d="" class="account-root-page">
 
-        <!-- Fixed header -->
         <section data-v-b035e588="" data-v-32bf0b5d="" class="top-header account-header">
           <header data-v-b035e588="" class="header-signup">
             <img data-v-b035e588="" src="https://image.paypay.ne.jp/images/payment-miniapps/opa/logo.png" alt="PayPay" height="45">
@@ -156,13 +141,11 @@
           <div data-v-b035e588="" class="header-more"></div>
         </section>
 
-        <!-- Page content -->
         <div data-v-32bf0b5d="" class="account-content">
           <section data-v-796fd186="" data-v-32bf0b5d="" class="account-signup-page">
             <h3 data-v-796fd186="">PayPayの利用には新規登録が必要です</h3>
 
             <section data-v-6ea1e05b="" data-v-796fd186="" class="signin-signon">
-              <!-- Phone number input -->
               <div data-v-6ea1e05b="" class="username">
                 <div data-v-6ea1e05b="" class="input-field">
                   <div data-v-6ea1e05b="" class="icons-on-input" style="display: none;"></div>
@@ -171,17 +154,15 @@
                 </div>
               </div>
 
-              <!-- Password input -->
               <div data-v-6ea1e05b="" class="password">
                 <div data-v-6ea1e05b="" class="input-field">
                   <div data-v-6ea1e05b="" class="icons-on-input" style="display: none;"></div>
                   <input data-v-6ea1e05b="" type="password" name="password" placeholder="パスワード" class="password-input" autocomplete="new-password">
                   <label data-v-6ea1e05b="" id="login-inputPassword-txt" for="password">パスワード</label>
                 </div>
-                <p data-v-6ea1e05b="" class="password-tip">半角英大文字・英小文字・数字を含む6〜32文字（記号可）</p>
+                <p data-v-6ea1e05b="" class="password-tip">半角英大文字・英小文字・数字を含む６〜３２文字（記号可）</p>
               </div>
 
-              <!-- Legal links -->
               <div data-v-796fd186="" class="infomation-content">
                 <a data-v-796fd186="" href="https://about.paypay.ne.jp/terms/" target="_blank">PayPay利用規約</a>、
                 <a data-v-796fd186="" href="https://about.paypay.ne.jp/terms/consumer/legal/money-light/" target="_blank">PayPayマネーライト資金決済法表示</a>、<br data-v-796fd186="">
@@ -189,14 +170,11 @@
                 <a data-v-796fd186="" href="https://about.paypay.ne.jp/docs/terms/privacy/" target="_blank">プライバシーポリシー</a>
               </div>
 
-              <!-- Submit -->
               <button data-v-6ea1e05b="" id="login-loginBtn" class="submit-button" disabled="">上記に同意して新規登録</button>
             </section>
 
-            <!-- External account separator -->
             <div data-v-796fd186="" class="separate-text">外部のアカウントで新規登録</div>
 
-            <!-- Yahoo! JAPAN ID -->
             <section data-v-cbe44f2d="" data-v-796fd186="" class="yconnect-action">
               <button data-v-cbe44f2d="" class="vm">
                 <i data-v-3c7781bb="" data-v-cbe44f2d="" class="component-icon icon-yahoo icon-sm ib vm"></i>
@@ -204,7 +182,6 @@
               </button>
             </section>
 
-            <!-- Switch to login -->
             <div data-v-796fd186="" class="switch-sign-flow">
               すでにアカウントをお持ちの場合
               <a data-v-796fd186="" href="signin.html">

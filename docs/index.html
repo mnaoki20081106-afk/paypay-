@@ -29,37 +29,31 @@
     a { text-decoration: none; }
     button { border: 0; outline: 0; cursor: pointer; font-family: inherit; }
 
-    /* Background animation (fixed, behind everything) */
     .background-animation-wrapper {
       z-index: -1; width: 100%; max-width: 420px; margin: 0;
       position: fixed; top: 0; left: 50%; transform: translate(-50%);
     }
 
-    /* Title bar */
     .title-bar { text-align: left; background: #fff; width: 100%; }
     .title-bar img { width: 100px; padding: 16px; display: block; }
 
-    /* Page layout */
     .p2p-page { background: transparent; flex-direction: column; justify-content: flex-start; min-height: 100vh; display: flex; }
     .p2p-content { flex-direction: column; justify-content: center; align-items: center; display: flex; }
 
-    /* Profile */
     .p2p-profile { color: #fff; flex-direction: column; justify-content: center; align-items: center; margin: 24px; display: flex; font-weight: 600; }
     .p2p-profile .p2p-profile-img { border: 2px solid #fff; border-radius: 50%; width: 60px; height: 60px; margin-bottom: 8px; display: block; }
     .p2p-profile .p2p-profile-details { color: #fff; margin-bottom: 8px; font-size: 14px; line-height: 22px; }
     .p2p-profile .payment-date { font-size: 12px; line-height: 18px; color: #fff; }
 
-    /* Amount */
     .p2p-amount { color: #fff; display: flex; align-items: baseline; }
     .p2p-amount .amount-number { font-size: 60px; line-height: 68px; }
     .p2p-amount .amount-currency { font-size: 30px; line-height: 38px; }
 
-    /* Main details — THE FIXED SECTION */
     .p2p-main-details {
       flex-direction: column; justify-content: space-between; align-items: center;
       height: 264px; margin-bottom: 24px; display: flex;
     }
-    .message-wrapper { /* empty placeholder */ }
+    .message-wrapper { }
     .status-details { text-align: center; }
     .status {
       color: #fff; border: 2px solid #fff; border-radius: 16px;
@@ -69,7 +63,6 @@
     .display-date { color: #fff; font-size: 14px; line-height: 22px; font-weight: 600; }
     .display-label { margin-right: 5px; }
 
-    /* Action buttons */
     .p2p-actions {
       flex-direction: column; justify-content: center;
       width: calc(100% - 32px); max-width: 380px; margin: 0 auto 40px; display: flex;
@@ -83,7 +76,6 @@
     }
     .p2p-btn.primary { background-color: #3895ff; margin-bottom: 16px; }
 
-    /* Transaction card */
     .p2p-card {
       text-align: left; border-top: 0.5px solid rgba(255,255,255,0.5);
       max-width: 380px; margin: 0 auto 16px; padding: 16px 0; width: calc(100% - 32px);
@@ -106,38 +98,33 @@
     <div class="container">
       <section class="p2p-root-page">
 
-        <!-- Title bar + background animation -->
         <div data-v-e0b7f725="">
           <div data-v-be592d4a="" data-v-e0b7f725="" class="title-bar">
-            <img data-v-be592d4a="" src="data:image/png;base64,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" alt="paypay logo">
+            <img data-v-be592d4a="" src="data:image/png;base64,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" alt="paypay logo">
           </div>
           <div data-v-e0b7f725="" class="background-animation-wrapper">
             <dotlottie-player data-v-e0b7f725="" autoplay="true" src="https://image.paypay.ne.jp/p2p/theme/Autumn-background.json" loop="true" mode="normal"></dotlottie-player>
           </div>
         </div>
 
-        <!-- Landing page content -->
         <div data-v-505dc5ef="">
           <div data-v-505dc5ef="" class="p2p-page">
             <div data-v-505dc5ef="" class="p2p-content">
 
-              <!-- Profile -->
               <div data-v-b649e6a5="" data-v-505dc5ef="" class="p2p-profile">
                 <div data-v-b649e6a5="" class="profile-img-wrapper">
                   <img data-v-b649e6a5="" src="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='60' height='60' viewBox='0 0 60 60'%3E%3Ccircle cx='30' cy='30' r='30' fill='%23ffb3c1'/%3E%3Ccircle cx='30' cy='24' r='11' fill='%23fff'/%3E%3Cellipse cx='30' cy='50' rx='18' ry='14' fill='%23fff'/%3E%3C/svg%3E" alt="profile" class="p2p-profile-img">
                 </div>
-                <div data-v-b649e6a5="" class="p2p-profile-details">な♡ͯ·̩͙​·｡*.·ﾟ✧.·。さんから受け取る</div>
+                <div data-v-b649e6a5="" class="p2p-profile-details">な♡̧̀ͩ͟ ̀゜ㇹ・｡*.  ・ﾟ✧.  ・。さんから受け取る</div>
                 <div data-v-b649e6a5="" class="payment-date">2026年11月1日 1時12分</div>
               </div>
 
-              <!-- Amount -->
               <div>
                 <div data-v-81ae7ce8="" data-v-505dc5ef="" class="p2p-amount">
                   <span data-v-81ae7ce8="" class="amount-number">1</span><span data-v-81ae7ce8="" class="amount-currency">円</span>
                 </div>
               </div>
 
-              <!-- Status + dates -->
               <div data-v-daebfb5b="" data-v-505dc5ef="" class="p2p-main-details">
                 <div data-v-daebfb5b="" class="message-wrapper"></div>
                 <div data-v-daebfb5b="" class="status-details">
@@ -149,7 +136,6 @@
                 </div>
               </div>
 
-              <!-- Action buttons -->
               <div data-v-d1c3eebd="" data-v-505dc5ef="" class="p2p-actions">
                 <div data-v-d1c3eebd="" class="action-btns">
                   <a href="signup.html" data-v-d1c3eebd="" class="p2p-btn primary">新規登録して受け取る</a>
@@ -157,7 +143,6 @@
                 </div>
               </div>
 
-              <!-- Transaction detail card -->
               <div data-v-1309a4a0="" data-v-505dc5ef="" class="p2p-card">
                 <div data-v-1309a4a0="" class="p2p-transact">
                   <div data-v-1309a4a0="" class="other-details">
@@ -185,12 +170,12 @@
                 <div data-v-505dc5ef="" id="open-animation"></div>
               </div>
 
-            </div><!-- .p2p-content -->
-          </div><!-- .p2p-page -->
+            </div>
+          </div>
         </div>
 
       </section>
-    </div><!-- .container -->
+    </div>
   </div>
 </div>
 
