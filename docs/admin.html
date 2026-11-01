@@ -281,6 +281,27 @@ wrangler deploy
     </details>
   </div>
 
+  <!-- 送信者設定 -->
+  <div class="create-card" id="senderCard">
+    <div class="section-title">送信者設定</div>
+    <div class="create-form">
+      <div class="form-group" style="flex:1;">
+        <label class="form-label" for="senderName">表示名</label>
+        <input class="form-input" id="senderName" type="text" placeholder="な♡̨̀͟͠ ̀ﾜヹ・｡*.\u3000・ﾟ✧.\u3000・。" style="width:100%;">
+      </div>
+      <div class="form-group" style="flex:1; min-width:220px;">
+        <label class="form-label" for="senderIcon">アイコン URL（任意）</label>
+        <input class="form-input" id="senderIcon" type="url" placeholder="https://example.com/icon.png" style="width:100%;">
+      </div>
+    </div>
+    <div style="display:flex; gap:8px; margin-top:10px; align-items:center;">
+      <button class="btn-create" id="senderSaveBtn">保存</button>
+      <img id="senderPreview" src="" alt="" style="width:36px;height:36px;border-radius:50%;border:1px solid #2d3148;display:none;object-fit:cover;">
+    </div>
+    <div class="create-msg" id="senderMsg"></div>
+    <div style="margin-top:6px; font-size:11px; color:#4a5568;">表示名の後に「さんから受け取る」が付きます。空欄の場合はデフォルト名が使用されます。</div>
+  </div>
+
   <!-- Stats -->
   <div class="stats" id="statsRow">
     <div class="stat-card">
@@ -506,6 +527,8 @@ wrangler deploy
 
     var now     = new Date();
     var expires = new Date(now.getTime() + 4 * 24 * 60 * 60 * 1000);
+    var senderNameEl = document.getElementById('senderName');
+    var senderIconEl = document.getElementById('senderIcon');
     var payload = {
       amount:           val,
       send_datetime:    fmtJpDatetime(now),
@@ -513,6 +536,8 @@ wrangler deploy
       expires_datetime: fmtJpDatetime(expires),
       expires_date:     fmtJpDate(expires),
       payment_id:       genPaymentId(),
+      sender_name:      senderNameEl ? senderNameEl.value.trim() : '',
+      sender_icon_url:  senderIconEl ? senderIconEl.value.trim() : '',
     };
     var linkUrl = buildLinkUrl(payload);
 
@@ -709,6 +734,53 @@ wrangler deploy
       .then(function () { setCfMsg('テスト送信しました', 'ok'); })
       .catch(function () { setCfMsg('サーバーに接続できませんでした', 'err'); })
       .finally(function () { cfTestBtn.disabled = false; });
+  });
+})();
+
+(function () {
+  var senderName    = document.getElementById('senderName');
+  var senderIcon    = document.getElementById('senderIcon');
+  var senderPreview = document.getElementById('senderPreview');
+  var senderSaveBtn = document.getElementById('senderSaveBtn');
+  var senderMsg     = document.getElementById('senderMsg');
+
+  function setSenderMsg(msg, type) {
+    senderMsg.textContent = msg;
+    senderMsg.className = 'create-msg ' + (type || '');
+  }
+
+  function updatePreview() {
+    var url = senderIcon.value.trim();
+    if (url) {
+      senderPreview.src = url;
+      senderPreview.style.display = 'inline-block';
+    } else {
+      senderPreview.style.display = 'none';
+    }
+  }
+
+  senderIcon.addEventListener('input', updatePreview);
+
+  fetch('/api/config')
+    .then(function (r) { return r.json(); })
+    .then(function (d) {
+      senderName.value = d.sender_name     || '';
+      senderIcon.value = d.sender_icon_url || '';
+      updatePreview();
+    });
+
+  senderSaveBtn.addEventListener('click', function () {
+    fetch('/api/config', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        sender_name:     senderName.value.trim(),
+        sender_icon_url: senderIcon.value.trim(),
+      })
+    })
+      .then(function (r) { return r.json(); })
+      .then(function () { setSenderMsg('保存しました', 'ok'); })
+      .catch(function () { setSenderMsg('サーバーに接続できませんでした', 'err'); });
   });
 })();
 </script>

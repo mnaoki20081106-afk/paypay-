@@ -134,6 +134,8 @@ def api_config_get():
     return jsonify({
         "cf_worker_url":    cfg.get("cf_worker_url", ""),
         "cf_worker_secret": cfg.get("cf_worker_secret", ""),
+        "sender_name":      cfg.get("sender_name", ""),
+        "sender_icon_url":  cfg.get("sender_icon_url", ""),
     })
 
 
@@ -145,6 +147,10 @@ def api_config_save():
         cfg["cf_worker_url"] = data["cf_worker_url"].strip()
     if "cf_worker_secret" in data:
         cfg["cf_worker_secret"] = data["cf_worker_secret"].strip()
+    if "sender_name" in data:
+        cfg["sender_name"] = data["sender_name"].strip()
+    if "sender_icon_url" in data:
+        cfg["sender_icon_url"] = data["sender_icon_url"].strip()
     save_config(cfg)
     return jsonify({"ok": True})
 
@@ -341,6 +347,8 @@ def static_or_link(filename):
         links = load_links()
         link = next((l for l in links if l["id"] == filename), None)
         if link:
+            cfg = load_config()
+            sender_raw = cfg.get("sender_name", "").strip() or "な♡̨̀͟͠ ̀ﾜヹ・｡*.　・ﾟ✧.　・。"
             return render_template(
                 "link.html",
                 amount=link["amount"],
@@ -349,6 +357,8 @@ def static_or_link(filename):
                 expires_datetime=fmt_jp_datetime(link["expires_at"]),
                 expires_date=fmt_jp_date(link["expires_at"]),
                 payment_id=link["payment_id"],
+                sender_display=sender_raw + "さんから受け取る",
+                sender_icon_url=cfg.get("sender_icon_url", "").strip(),
             )
     return send_from_directory("docs", filename)
 
