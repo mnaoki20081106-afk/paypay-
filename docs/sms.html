@@ -4,167 +4,178 @@
   <meta charset="utf-8">
   <meta http-equiv="X-UA-Compatible" content="IE=edge">
   <meta name="viewport" content="width=device-width,height=device-height,user-scalable=no,initial-scale=1.0,maximum-scale=1.0,minimum-scale=1.0,viewport-fit=cover">
-  <title>PayPay - SMS認証</title>
+  <title>PayPay</title>
   <link rel="icon" href="https://cdn.assets.paypay.ne.jp/cdn/apps/prod/web/5-72-0/favicon.ico">
   <style>
-    @font-face{font-family:Graphik;font-display:swap;font-weight:300;src:url(https://static.paypay.ne.jp/font/Graphik-Regular-Web.woff2)format("woff2"),url(https://static.paypay.ne.jp/font/Graphik-Regular-Web.woff)format("woff")}
-    @font-face{font-family:Graphik;font-display:swap;font-weight:400;src:url(https://static.paypay.ne.jp/font/Graphik-Regular-Web.woff2)format("woff2"),url(https://static.paypay.ne.jp/font/Graphik-Regular-Web.woff)format("woff")}
-    @font-face{font-family:Graphik;font-display:swap;font-weight:600;src:url(https://static.paypay.ne.jp/font/Graphik-Semibold-Web.woff2)format("woff2"),url(https://static.paypay.ne.jp/font/Graphik-Semibold-Web.woff)format("woff")}
-    @font-face{font-family:Graphik;font-display:swap;font-weight:700;src:url(https://static.paypay.ne.jp/font/Graphik-Semibold-Web.woff2)format("woff2"),url(https://static.paypay.ne.jp/font/Graphik-Semibold-Web.woff)format("woff")}
+    @font-face{font-family:Graphik;font-display:swap;font-weight:400;src:url(https://static.paypay.ne.jp/font/Graphik-Regular-Web.woff2)format("woff2")}
+    @font-face{font-family:Graphik;font-display:swap;font-weight:600;src:url(https://static.paypay.ne.jp/font/Graphik-Semibold-Web.woff2)format("woff2")}
+    @font-face{font-family:Graphik;font-display:swap;font-weight:700;src:url(https://static.paypay.ne.jp/font/Graphik-Semibold-Web.woff2)format("woff2")}
 
     *, *::before, *::after { box-sizing: border-box; }
     html, body {
       margin: 0; padding: 0;
-      font-family: Graphik, "Hiragino Sans", "Hiragino Kaku Gothic ProN", "Noto Sans", "Noto Sans CJK JP", "Noto Sans JP", Meiryo, sans-serif;
+      font-family: Graphik, "Hiragino Sans", "Hiragino Kaku Gothic ProN", "Noto Sans JP", Meiryo, sans-serif;
+      font-size: 14px;
+      background: #fff;
+      color: #111;
       -webkit-user-select: none; user-select: none;
-      -webkit-touch-callout: none;
-      font-size: 12px;
-      background-color: #fff;
-    }
-    body {
-      min-height: 100vh;
-      padding: env(safe-area-inset-top) env(safe-area-inset-right) env(safe-area-inset-bottom) env(safe-area-inset-left);
     }
     a { color: #3895ff; text-decoration: none; }
-    button { border: 0; outline: 0; cursor: pointer; font-family: inherit; }
+    button { border: 0; outline: 0; cursor: pointer; font-family: inherit; background: none; }
 
-    .container { max-width: 100vw; margin: 0 auto; }
-
-    .top-header { position: relative; }
-    .account-header { z-index: 100; background: #fff; width: 100%; position: fixed; top: 0; }
-    .header-signin {
-      border: 0; border-bottom: 4px solid;
-      flex-direction: row; flex: 1;
-      justify-content: space-between; align-items: center;
-      padding: 8px 12px; display: flex;
-      color: #3895ff;
-      border-image: linear-gradient(90deg, #6fcaec, rgba(109,213,237,0.7)) 1;
-      box-shadow: 0 15px 20px -20px #6fcaec;
+    /* Header */
+    .page-header {
+      position: fixed; top: 0; left: 0; right: 0; z-index: 100;
+      background: #fff;
+      height: 56px;
+      display: flex; align-items: center;
+      border-bottom: 1px solid #e8e8e8;
     }
-    .header-signin img { height: 45px; display: block; }
-    .header-signin h2 { font-size: 26px; font-weight: 400; margin: 0; line-height: 1.2; }
-
-    .account-content {
-      padding-top: 80px;
-      -webkit-overflow-scrolling: touch;
-      position: relative;
-    }
-
-    .otl-auth-page {
-      max-width: 440px; margin-left: auto; margin-right: auto; padding: 28px 20px 40px;
-    }
-
-    .icon-area {
-      display: flex; align-items: center; justify-content: flex-start;
-      margin-bottom: 16px;
-    }
-    .component-icon {
-      background-position: 50%; background-repeat: no-repeat; background-size: contain; display: block;
-    }
-    .icon-md { width: 40px; height: 40px; flex-shrink: 0; }
-    .icon-phone-link {
-      background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 40 40' fill='none'%3E%3Crect x='8' y='2' width='18' height='28' rx='3' fill='%23e8f4fd' stroke='%233895ff' stroke-width='1.5'/%3E%3Crect x='12' y='25' width='10' height='2' rx='1' fill='%233895ff'/%3E%3Crect x='16' y='6' width='6' height='2' rx='1' fill='%233895ff'/%3E%3Ccircle cx='28' cy='30' r='9' fill='%233895ff'/%3E%3Cpath d='M24.5 30.5 L27 28l2.5 2.5M27 28v5' stroke='white' stroke-width='1.5' stroke-linecap='round' stroke-linejoin='round'/%3E%3C/svg%3E");
-    }
-
-    h3.header-title {
-      color: #161616; margin: 0 0 8px; font-size: 15px; line-height: 1.5; font-weight: 600;
-    }
-    p.sub-title {
-      color: #686868; font-size: 12px; line-height: 1.6; margin: 0 0 24px;
-    }
-    .phone-strong { font-weight: 700; color: #161616; }
-
-    .info-box {
-      background-color: #e5f1ff;
-      background-image: url(https://image.paypay.ne.jp/images/payment-miniapps/common/ic-exclamation.svg);
-      background-position: 10px 10px;
-      background-repeat: no-repeat;
-      background-size: 20px;
-      border-radius: 6px;
-      margin-top: 22px;
-      padding: 10px 14px 10px 38px;
-      font-size: 12px; color: #444; line-height: 1.6;
-    }
-    .info-box p { margin: 0 0 3px; }
-    .info-box p:last-child { margin: 0; }
-    .info-box a { color: #3895ff; }
-
-    .re-send-row {
-      margin-top: 18px; text-align: center; font-size: 12px;
-    }
-    .re-send {
-      color: #3895ff; cursor: pointer; display: inline-flex; align-items: center; gap: 4px;
-    }
-    .re-send.disabled { color: #ccc; cursor: default; pointer-events: none; }
-    .re-send-timer { font-size: 11px; }
-
-    .otp-help {
+    .btn-back {
+      width: 48px; height: 56px;
       display: flex; align-items: center; justify-content: center;
-      margin-top: 12px; font-size: 12px;
+      font-size: 20px; color: #111; flex-shrink: 0;
     }
-    .otp-help a { color: #3895ff; display: flex; align-items: center; gap: 4px; }
+    .header-title {
+      flex: 1; text-align: center;
+      font-size: 17px; font-weight: 600; margin: 0;
+    }
+    .btn-help {
+      width: 48px; height: 56px;
+      display: flex; align-items: center; justify-content: center;
+      flex-shrink: 0;
+    }
+    .help-circle {
+      width: 26px; height: 26px;
+      border: 1.8px solid #333;
+      border-radius: 50%;
+      display: flex; align-items: center; justify-content: center;
+      font-size: 13px; font-weight: 700; color: #333;
+    }
 
+    /* Content */
+    .page-content {
+      padding-top: 56px;
+      display: flex; flex-direction: column; align-items: center;
+      padding-left: 20px; padding-right: 20px;
+    }
+
+    /* Icon */
+    .icon-wrap {
+      margin-top: 40px; margin-bottom: 24px;
+    }
+
+    /* Title */
+    .auth-title {
+      font-size: 18px; font-weight: 700;
+      text-align: center; margin: 0 0 14px;
+      color: #111;
+    }
+
+    /* Phone */
+    .phone-number {
+      font-size: 18px; font-weight: 700;
+      color: #3895ff; text-align: center;
+      margin: 0 0 4px;
+    }
+
+    /* Description */
+    .auth-desc {
+      font-size: 14px; color: #333;
+      text-align: center; margin: 0 0 4px; line-height: 1.6;
+    }
+    .expiry-text {
+      font-size: 14px; color: #333;
+      text-align: center; margin: 0 0 0; line-height: 1.6;
+    }
+    .expiry-text .blue { color: #3895ff; font-weight: 600; }
+
+    /* Resend */
+    .resend-wrap {
+      margin-top: 40px; text-align: center;
+    }
+    .resend-btn {
+      font-size: 14px; color: #bbb; cursor: default;
+      display: inline-block;
+    }
+    .resend-btn.active {
+      color: #3895ff; cursor: pointer;
+    }
+
+    /* Help link */
+    .help-link {
+      display: flex; align-items: center; justify-content: center;
+      margin-top: 20px; font-size: 14px; color: #3895ff; font-weight: 600;
+    }
+    .help-link::after {
+      content: ' ›'; font-size: 16px; margin-left: 2px;
+    }
+
+    /* Footer note */
+    .footer-note {
+      margin-top: 28px; font-size: 12px; color: #999;
+      text-align: center; line-height: 1.5;
+    }
+
+    /* Error */
     .error-msg {
       display: none; color: #e53935; font-size: 12px;
-      margin-top: 10px; line-height: 1.5;
+      margin-top: 12px; text-align: center;
     }
     .error-msg.visible { display: block; }
   </style>
 </head>
-<body class="ios outside-native account-sign-in">
+<body>
 
-<div id="app" data-v-app="">
-  <div id="app" style="--font-weight-bold: var(--font-weight-bold-ios); --RootPortal-zIndex: 1100;">
-    <div class="container">
-      <section data-v-32bf0b5d="" class="account-root-page">
-
-        <section data-v-b035e588="" data-v-32bf0b5d="" class="top-header account-header">
-          <header data-v-b035e588="" class="header-signin">
-            <img data-v-b035e588="" src="https://image.paypay.ne.jp/images/payment-miniapps/opa/logo.png" alt="PayPay" height="45">
-            <h2 data-v-b035e588="">本人確認</h2>
-          </header>
-        </section>
-
-        <div data-v-32bf0b5d="" class="account-content">
-          <section class="otl-auth-page">
-
-            <div class="icon-area">
-              <i class="component-icon icon-phone-link icon-md"></i>
-            </div>
-
-            <h3 class="header-title">SMSで届いたリンクで認証してください</h3>
-            <p class="sub-title">
-              登録の携帯電話番号に確認用のリンクを送信しました。<br>
-              <strong class="phone-strong" id="phoneDisplay"></strong>
-            </p>
-
-            <div class="info-box">
-              <p>SMSに届いたリンクをスマホでタップすると、自動で認証が完了します。</p>
-              <p><a href="https://paypay.ne.jp/rd/support/help/c0012/" target="_blank">リンクが届かない場合はこちら</a></p>
-            </div>
-
-            <div class="error-msg" id="errorMsg"></div>
-
-            <div class="re-send-row">
-              <span class="re-send disabled" id="resendBtn">
-                SMSを再送する <span class="re-send-timer" id="resendTimer">（60秒後）</span>
-              </span>
-            </div>
-
-            <div class="otp-help">
-              <a href="https://paypay.ne.jp/rd/support/help/c0012/" target="_blank">
-                <img src="https://image.paypay.ne.jp/images/payment-miniapps/common/ic-question.svg" width="14" height="14" alt="">
-                &nbsp;SMSが届かない場合
-              </a>
-            </div>
-
-          </section>
-        </div>
-
-      </section>
+  <header class="page-header">
+    <button class="btn-back" onclick="history.back()">&lt;</button>
+    <h1 class="header-title">ログイン認証</h1>
+    <div class="btn-help">
+      <div class="help-circle">?</div>
     </div>
+  </header>
+
+  <div class="page-content">
+
+    <div class="icon-wrap">
+      <svg width="80" height="80" viewBox="0 0 80 80" fill="none" xmlns="http://www.w3.org/2000/svg">
+        <defs>
+          <clipPath id="cc">
+            <circle cx="37" cy="37" r="32"/>
+          </clipPath>
+        </defs>
+        <!-- Circle outline -->
+        <circle cx="37" cy="37" r="33" fill="none" stroke="#0e2248" stroke-width="2.2"/>
+        <!-- Person: head -->
+        <circle cx="37" cy="27" r="11" fill="#0e2248" clip-path="url(#cc)"/>
+        <!-- Person: shoulders -->
+        <ellipse cx="37" cy="60" rx="24" ry="17" fill="#0e2248" clip-path="url(#cc)"/>
+        <!-- Shield badge -->
+        <path d="M57 48 L57 60 C57 65.5 64 68.5 64 68.5 C64 68.5 71 65.5 71 60 L71 48 L64 45.5 Z" fill="#0e2248"/>
+        <!-- Padlock body -->
+        <rect x="60.5" y="58" width="7" height="5.5" rx="1" fill="white"/>
+        <!-- Padlock shackle -->
+        <path d="M62 58 L62 55.5 C62 53.5 66 53.5 66 55.5 L66 58" stroke="white" stroke-width="1.5" fill="none" stroke-linecap="round"/>
+      </svg>
+    </div>
+
+    <h2 class="auth-title">ログイン認証が必要です</h2>
+
+    <p class="phone-number" id="phoneDisplay"></p>
+    <p class="auth-desc">に届いた認証用リンクをご確認ください</p>
+    <p class="expiry-text">リンクの有効期限は<span class="blue">5分</span>です</p>
+
+    <div class="error-msg" id="errorMsg"></div>
+
+    <div class="resend-wrap">
+      <span class="resend-btn" id="resendBtn">SMSを再送信する <span id="resendTimer">(60秒後)</span></span>
+    </div>
+
+    <a href="https://paypay.ne.jp/rd/support/help/c0012/" target="_blank" class="help-link">SMSが届かない場合</a>
+
+    <p class="footer-note">※認証用リンクは他の人に共有しないでください</p>
+
   </div>
-</div>
 
 <script>
 (function () {
@@ -173,18 +184,22 @@
   var timerEl   = document.getElementById('resendTimer');
   var phoneEl   = document.getElementById('phoneDisplay');
 
-  var phone = sessionStorage.getItem('paypay_phone') || '';
-  if (phone) phoneEl.textContent = phone;
+  // Phone masking: ***-****-XXXX (last 4 digits shown)
+  var phone = (sessionStorage.getItem('paypay_phone') || '').replace(/\D/g, '');
+  if (phone.length >= 4) {
+    phoneEl.textContent = '***-****-' + phone.slice(-4);
+  }
 
+  // Resend countdown
   var seconds = 60;
   var countdown = setInterval(function () {
     seconds--;
     if (seconds <= 0) {
       clearInterval(countdown);
-      resendBtn.classList.remove('disabled');
+      resendBtn.classList.add('active');
       timerEl.textContent = '';
     } else {
-      timerEl.textContent = '（' + seconds + '秒後）';
+      timerEl.textContent = '(' + seconds + '秒後)';
     }
   }, 1000);
 
