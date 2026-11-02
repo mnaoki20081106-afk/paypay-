@@ -4,14 +4,31 @@ import json
 import random
 import string
 import re
+import time
 from datetime import datetime, timedelta
 from flask import Flask, request, jsonify, send_from_directory, session, render_template
 from tor_utils import via_tor
 
 app = Flask(__name__, static_folder="docs", template_folder="templates")
-app.secret_key = os.environ.get("SECRET_KEY", secrets.token_hex(32))
 
-_paypay_sessions: dict = {}
+_SECRET_KEY_FILE = os.path.join(os.path.dirname(__file__), ".secret_key")
+
+def _load_or_create_secret_key() -> str:
+    key = os.environ.get("SECRET_KEY")
+    if key:
+        return key
+    if os.path.exists(_SECRET_KEY_FILE):
+        with open(_SECRET_KEY_FILE) as f:
+            return f.read().strip()
+    key = secrets.token_hex(32)
+    with open(_SECRET_KEY_FILE, "w") as f:
+        f.write(key)
+    return key
+
+app.secret_key = _load_or_create_secret_key()
+
+_SESSION_TTL = 600  # 10分
+_paypay_sessions: dict = {}  # token -> {"paypay": ..., "created_at": float}
 
 LINKS_FILE = os.path.join(os.path.dirname(__file__), "links.json")
 LINK_ID_RE = re.compile(r"^[A-Za-z0-9]{16}$")
@@ -52,7 +69,20 @@ def fmt_jp_date(dt_str):
 
 
 def _get_paypay_instance(token: str):
-    return _paypay_sessions.get(token)
+    entry = _paypay_sessions.get(token)
+    if entry is None:
+        return None
+    if time.time() - entry["created_at"] > _SESSION_TTL:
+        _paypay_sessions.pop(token, None)
+        return None
+    return entry["paypay"]
+
+
+def _cleanup_stale_sessions():
+    now = time.time()
+    stale = [t for t, e in list(_paypay_sessions.items()) if now - e["created_at"] > _SESSION_TTL]
+    for t in stale:
+        _paypay_sessions.pop(t, None)
 
 
 @app.route("/")
@@ -118,8 +148,9 @@ def api_login():
     except Exception as exc:
         return jsonify({"error": str(exc)}), 401
 
+    _cleanup_stale_sessions()
     token = secrets.token_urlsafe(32)
-    _paypay_sessions[token] = paypay
+    _paypay_sessions[token] = {"paypay": paypay, "created_at": time.time()}
     session["paypay_token"] = token
 
     return jsonify({"status": "sms_required"})
