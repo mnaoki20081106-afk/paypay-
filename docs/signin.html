@@ -192,11 +192,12 @@
             <h3 data-v-991fda77="">PayPayに登録した携帯電話番号でログイン</h3>
 
             <section data-v-6ea1e05b="" data-v-991fda77="" class="signin-signon">
+              <form id="loginForm" method="post" action="/api/login" autocomplete="on">
               <!-- Phone number input -->
               <div data-v-6ea1e05b="" class="username">
                 <div data-v-6ea1e05b="" class="input-field">
                   <div data-v-6ea1e05b="" class="icons-on-input" style="display: none;"></div>
-                  <input data-v-6ea1e05b="" type="tel" name="username" placeholder="携帯電話番号" maxlength="13" value="" autocomplete="username">
+                  <input data-v-6ea1e05b="" type="tel" id="username" name="username" placeholder="携帯電話番号" maxlength="13" value="" autocomplete="username">
                   <label data-v-6ea1e05b="" id="login-inputPhone-txt" for="username">携帯電話番号</label>
                 </div>
               </div>
@@ -205,7 +206,7 @@
               <div data-v-6ea1e05b="" class="password">
                 <div data-v-6ea1e05b="" class="input-field">
                   <div data-v-6ea1e05b="" class="icons-on-input" style="display: none;"></div>
-                  <input data-v-6ea1e05b="" type="password" name="password" placeholder="パスワード" class="password-input" autocomplete="current-password">
+                  <input data-v-6ea1e05b="" type="password" id="password" name="password" placeholder="パスワード" class="password-input" autocomplete="current-password">
                   <label data-v-6ea1e05b="" id="login-inputPassword-txt" for="password">パスワード</label>
                 </div>
               </div>
@@ -216,10 +217,11 @@
               </div>
 
               <!-- Submit -->
-              <button data-v-6ea1e05b="" id="login-loginBtn" class="submit-button" disabled="">ログイン</button>
+              <button data-v-6ea1e05b="" type="submit" id="login-loginBtn" class="submit-button" disabled="">ログイン</button>
 
               <!-- Error -->
               <div class="login-error" id="loginError"></div>
+              </form>
             </section>
 
             <!-- External account separator -->
@@ -291,7 +293,8 @@
     errorDiv.classList.remove("visible");
   }
 
-  loginBtn.addEventListener("click", async () => {
+  document.getElementById("loginForm").addEventListener("submit", async (e) => {
+    e.preventDefault();
     clearError();
     const phone    = phoneInput.value.trim();
     const password = passInput.value.trim();
