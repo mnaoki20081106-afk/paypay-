@@ -1,4 +1,4 @@
 flask>=3.0.0
-PayPaython-mobile
+git+https://github.com/reidayoo/paypy.git
 requests[socks]
 stem

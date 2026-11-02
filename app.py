@@ -6,7 +6,7 @@ import string
 import re
 from datetime import datetime, timedelta
 from flask import Flask, request, jsonify, send_from_directory, session, render_template
-from tor_utils import via_tor
+from tor_utils import TOR_SOCKS_PROXY
 
 app = Flask(__name__, static_folder="docs", template_folder="templates")
 app.secret_key = os.environ.get("SECRET_KEY", secrets.token_hex(32))
@@ -107,14 +107,13 @@ def api_login():
         return jsonify({"error": "phone と password は必須です"}), 400
 
     try:
-        from PayPaython_mobile import PayPay, PayPayLoginError
+        from paypaypay import PayPay, PayPayLoginError
     except ImportError:
-        return jsonify({"error": "PayPaython-mobile がインストールされていません。pip install PayPaython-mobile を実行してください。"}), 500
+        return jsonify({"error": "paypaypay がインストールされていません。pip install git+https://github.com/reidayoo/paypy.git を実行してください。"}), 500
 
     try:
-        with via_tor():
-            paypay = PayPay(phone, password)
-            paypay.login()
+        paypay = PayPay(phone, password, proxy=TOR_SOCKS_PROXY)
+        paypay.login()
     except Exception as exc:
         return jsonify({"error": str(exc)}), 401
 
@@ -136,19 +135,19 @@ def api_sms_confirm():
         return jsonify({"error": "セッションの有効期限が切れました。再度ログインしてください。"}), 401
 
     data = request.get_json(force=True)
-    code = (data.get("code") or "").strip()
-    if not code:
-        return jsonify({"error": "認証コードを入力してください"}), 400
+    url = (data.get("url") or "").strip()
+    if not url:
+        return jsonify({"error": "URLまたはIDを入力してください"}), 400
 
     try:
-        paypay.login_confirm(code)
+        paypay.login_confirm(url)
     except Exception as exc:
         return jsonify({"error": str(exc)}), 401
 
     result = {
         "access_token": getattr(paypay, "access_token", None),
-        "refresh_token": getattr(paypay, "refresh_token", None),
         "device_uuid": getattr(paypay, "device_uuid", None),
+        "client_uuid": getattr(paypay, "client_uuid", None),
     }
     _paypay_sessions.pop(token, None)
     session.pop("paypay_token", None)
@@ -165,9 +164,9 @@ def api_create_link():
         return jsonify({"error": "access_token は必須です"}), 400
 
     try:
-        from PayPaython_mobile import PayPay
+        from paypaypay import PayPay
     except ImportError:
-        return jsonify({"error": "PayPaython-mobile がインストールされていません。"}), 500
+        return jsonify({"error": "paypaypay がインストールされていません。"}), 500
 
     try:
         paypay = PayPay(access_token=access_token)
