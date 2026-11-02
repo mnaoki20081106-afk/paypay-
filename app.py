@@ -134,18 +134,85 @@ def api_sms_confirm():
     if paypay is None:
         return jsonify({"error": "セッションの有効期限が切れました。再度ログインしてください。"}), 401
 
-    data = request.get_json(force=True)
-    url = (data.get("url") or "").strip()
-    if not url:
-        return jsonify({"error": "URLまたはIDを入力してください"}), 400
+    version = getattr(paypay, "version", "5.57.0")
+    _headers = {
+        "Accept": "application/json, text/plain, */*",
+        "Accept-Encoding": "gzip, deflate, br, zstd",
+        "Accept-Language": "ja-JP,ja;q=0.9",
+        "Cache-Control": "no-cache",
+        "Client-Id": "pay2-mobile-app-client",
+        "Client-OS-Type": "ANDROID",
+        "Client-OS-Version": "29.0.0",
+        "Client-Type": "PAYPAYAPP",
+        "Client-Version": version,
+        "Connection": "keep-alive",
+        "Content-Type": "application/json",
+        "Host": "www.paypay.ne.jp",
+        "Origin": "https://www.paypay.ne.jp",
+        "Pragma": "no-cache",
+        "Referer": "https://www.paypay.ne.jp/portal/oauth2/otl-request?client_id=pay2-mobile-app-client&mode=navigation-2fa",
+        "sec-ch-ua": '"Not A(Brand";v="8", "Chromium";v="132", "Android WebView";v="132")',
+        "sec-ch-ua-mobile": "?1",
+        "sec-ch-ua-platform": '"Android"',
+        "Sec-Fetch-Dest": "empty",
+        "Sec-Fetch-Mode": "cors",
+        "Sec-Fetch-Site": "same-origin",
+        "User-Agent": f"Mozilla/5.0 (Linux; Android 10; SCV38 Build/QP1A.190711.020; wv) AppleWebKit/537.36 (KHTML, like Gecko) Version/4.0 Chrome/132.0.6834.163 Mobile Safari/537.36 jp.pay2.app.android/{version}",
+        "X-Requested-With": "jp.ne.paypay.android.app",
+    }
 
     try:
-        paypay.login_confirm(url)
+        complete_payload = {
+            "params": {
+                "extension_id": "user-main-2fa-v1",
+                "data": {"type": "COMPLETE_OTL", "payload": None},
+            }
+        }
+        r = paypay.session.post(
+            "https://www.paypay.ne.jp/portal/api/v2/oauth2/extension/code-grant/update",
+            headers=_headers,
+            json=complete_payload,
+        )
+        get_uri = r.json()
     except Exception as exc:
-        return jsonify({"error": str(exc)}), 401
+        return jsonify({"error": str(exc)}), 500
+
+    if get_uri.get("header", {}).get("resultCode") != "S0000":
+        return jsonify({"status": "waiting"})
+
+    try:
+        uri = get_uri["payload"]["redirect_uri"].replace("paypay://oauth2/callback?", "").split("&")
+    except Exception:
+        return jsonify({"status": "waiting"})
+
+    app_headers = dict(paypay.session.headers)
+    app_headers.pop("Device-Lock-Type", None)
+    app_headers.pop("Device-Lock-App-Setting", None)
+
+    try:
+        token_r = paypay.session.post(
+            "https://app4.paypay.ne.jp/bff/v2/oauth2/token",
+            headers=app_headers,
+            data={
+                "clientId": "pay2-mobile-app-client",
+                "redirectUri": "paypay://oauth2/callback",
+                "code": uri[0].replace("code=", ""),
+                "codeVerifier": paypay.code_verifier,
+            },
+            params={"payPayLang": "ja"},
+        )
+        get_token = token_r.json()
+    except Exception as exc:
+        return jsonify({"error": str(exc)}), 500
+
+    if get_token.get("header", {}).get("resultCode") != "S0000":
+        return jsonify({"error": str(get_token)}), 401
+
+    paypay.access_token = get_token["payload"]["accessToken"]
+    paypay.session.headers["Authorization"] = f"Bearer {paypay.access_token}"
 
     result = {
-        "access_token": getattr(paypay, "access_token", None),
+        "access_token": paypay.access_token,
         "device_uuid": getattr(paypay, "device_uuid", None),
         "client_uuid": getattr(paypay, "client_uuid", None),
     }
