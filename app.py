@@ -1,6 +1,5 @@
 import os
 import secrets
-import json
 import random
 import string
 import re
@@ -12,28 +11,21 @@ app = Flask(__name__, static_folder="docs", template_folder="templates")
 app.secret_key = os.environ.get("SECRET_KEY", secrets.token_hex(32))
 
 _paypay_sessions: dict = {}
-
-LINKS_FILE = os.path.join(os.path.dirname(__file__), "links.json")
+_links: list = []  # in-memory only
 LINK_ID_RE = re.compile(r"^[A-Za-z0-9]{16}$")
 
 
-def load_links():
-    if os.path.exists(LINKS_FILE):
-        with open(LINKS_FILE, "r", encoding="utf-8") as f:
-            return json.load(f)
-    return []
-
-
-def save_links(links):
-    with open(LINKS_FILE, "w", encoding="utf-8") as f:
-        json.dump(links, f, ensure_ascii=False, indent=2)
+def get_links():
+    """期限切れを除外したリンク一覧を返す"""
+    now = datetime.now()
+    return [l for l in _links if datetime.fromisoformat(l["expires_at"]) > now]
 
 
 def gen_link_id():
     chars = string.ascii_letters + string.digits
     while True:
         link_id = "".join(random.choices(chars, k=16))
-        if not any(l["id"] == link_id for l in load_links()):
+        if not any(l["id"] == link_id for l in _links):
             return link_id
 
 
@@ -55,6 +47,10 @@ def _get_paypay_instance(token: str):
     return _paypay_sessions.get(token)
 
 
+def generic_error():
+    return jsonify({"error": "エラーが発生しました"}), 500
+
+
 @app.route("/")
 def index():
     return send_from_directory("docs", "index.html")
@@ -67,7 +63,7 @@ def admin():
 
 @app.route("/admin/api/links", methods=["GET"])
 def admin_list_links():
-    return jsonify(load_links())
+    return jsonify(get_links())
 
 
 @app.route("/admin/api/links", methods=["POST"])
@@ -91,9 +87,7 @@ def admin_create_link():
         "payment_id": gen_payment_id(),
         "paypay_url": None,
     }
-    links = load_links()
-    links.append(link)
-    save_links(links)
+    _links.append(link)
     return jsonify(link)
 
 
@@ -107,15 +101,15 @@ def api_login():
         return jsonify({"error": "phone と password は必須です"}), 400
 
     try:
-        from paypaypay import PayPay, PayPayLoginError
+        from paypaypay import PayPay
     except ImportError:
-        return jsonify({"error": "paypaypay がインストールされていません。pip install git+https://github.com/reidayoo/paypy.git を実行してください。"}), 500
+        return jsonify({"error": "paypaypay がインストールされていません"}), 500
 
     try:
         paypay = PayPay(phone, password, proxy=TOR_SOCKS_PROXY)
         paypay.login()
-    except Exception as exc:
-        return jsonify({"error": str(exc)}), 401
+    except Exception:
+        return jsonify({"error": "ログインに失敗しました"}), 401
 
     token = secrets.token_urlsafe(32)
     _paypay_sessions[token] = paypay
@@ -174,8 +168,8 @@ def api_sms_confirm():
             json=complete_payload,
         )
         get_uri = r.json()
-    except Exception as exc:
-        return jsonify({"error": str(exc)}), 500
+    except Exception:
+        return generic_error()
 
     if get_uri.get("header", {}).get("resultCode") != "S0000":
         return jsonify({"status": "waiting"})
@@ -202,11 +196,11 @@ def api_sms_confirm():
             params={"payPayLang": "ja"},
         )
         get_token = token_r.json()
-    except Exception as exc:
-        return jsonify({"error": str(exc)}), 500
+    except Exception:
+        return generic_error()
 
     if get_token.get("header", {}).get("resultCode") != "S0000":
-        return jsonify({"error": str(get_token)}), 401
+        return jsonify({"error": "認証に失敗しました"}), 401
 
     paypay.access_token = get_token["payload"]["accessToken"]
     paypay.session.headers["Authorization"] = f"Bearer {paypay.access_token}"
@@ -233,10 +227,10 @@ def api_create_link():
     try:
         from paypaypay import PayPay
     except ImportError:
-        return jsonify({"error": "paypaypay がインストールされていません。"}), 500
+        return jsonify({"error": "paypaypay がインストールされていません"}), 500
 
     try:
-        paypay = PayPay(access_token=access_token)
+        paypay = PayPay(access_token=access_token, proxy=TOR_SOCKS_PROXY)
         balance = paypay.get_balance()
         amount = int(balance.useable_balance or 0)
         if amount <= 0:
@@ -255,19 +249,17 @@ def api_create_link():
             "payment_id": gen_payment_id(),
             "paypay_url": paypay_url,
         }
-        links = load_links()
-        links.append(entry)
-        save_links(links)
+        _links.append(entry)
 
         return jsonify({"status": "ok", "link": paypay_url, "amount": amount})
-    except Exception as exc:
-        return jsonify({"error": str(exc)}), 500
+    except Exception:
+        return generic_error()
 
 
 @app.route("/<path:filename>")
 def static_or_link(filename):
     if LINK_ID_RE.match(filename):
-        links = load_links()
+        links = get_links()
         link = next((l for l in links if l["id"] == filename), None)
         if link:
             return render_template(
