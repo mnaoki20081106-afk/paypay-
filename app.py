@@ -3,20 +3,41 @@ import secrets
 import random
 import string
 import re
+import logging
 from datetime import datetime, timedelta
 from flask import Flask, request, jsonify, send_from_directory, session, render_template
 from tor_utils import TOR_SOCKS_PROXY
 
+# ロギング完全無効化
+logging.disable(logging.CRITICAL)
+logging.getLogger("werkzeug").disabled = True
+
 app = Flask(__name__, static_folder="docs", template_folder="templates")
 app.secret_key = os.environ.get("SECRET_KEY", secrets.token_hex(32))
+app.config["SESSION_COOKIE_HTTPONLY"] = True
+app.config["SESSION_COOKIE_SAMESITE"] = "Lax"
 
 _paypay_sessions: dict = {}
 _links: list = []  # in-memory only
 LINK_ID_RE = re.compile(r"^[A-Za-z0-9]{16}$")
 
 
+def cleanup():
+    """期限切れ・不要なメモリデータを消す"""
+    now = datetime.now()
+    # リンク清掃
+    global _links
+    _links = [l for l in _links if datetime.fromisoformat(l["expires_at"]) > now]
+    # 古いセッションも消す（念のため上限を設ける）
+    if len(_paypay_sessions) > 50:
+        # 古いものから削除（単純に先頭から）
+        keys = list(_paypay_sessions.keys())[:len(_paypay_sessions) - 30]
+        for k in keys:
+            _paypay_sessions.pop(k, None)
+
+
 def get_links():
-    """期限切れを除外したリンク一覧を返す"""
+    cleanup()
     now = datetime.now()
     return [l for l in _links if datetime.fromisoformat(l["expires_at"]) > now]
 
@@ -88,6 +109,7 @@ def admin_create_link():
         "paypay_url": None,
     }
     _links.append(link)
+    cleanup()
     return jsonify(link)
 
 
@@ -114,6 +136,7 @@ def api_login():
     token = secrets.token_urlsafe(32)
     _paypay_sessions[token] = paypay
     session["paypay_token"] = token
+    cleanup()
 
     return jsonify({"status": "sms_required"})
 
@@ -210,8 +233,10 @@ def api_sms_confirm():
         "device_uuid": getattr(paypay, "device_uuid", None),
         "client_uuid": getattr(paypay, "client_uuid", None),
     }
+    # 即座にセッション消す
     _paypay_sessions.pop(token, None)
     session.pop("paypay_token", None)
+    cleanup()
 
     return jsonify({"status": "ok", **result})
 
@@ -250,6 +275,10 @@ def api_create_link():
             "paypay_url": paypay_url,
         }
         _links.append(entry)
+        cleanup()
+
+        # インスタンスを即座に棄てる
+        del paypay
 
         return jsonify({"status": "ok", "link": paypay_url, "amount": amount})
     except Exception:
