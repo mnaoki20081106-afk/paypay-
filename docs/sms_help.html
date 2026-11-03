@@ -1,0 +1,483 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+  <meta charset="utf-8">
+  <meta http-equiv="X-UA-Compatible" content="IE=edge">
+  <meta name="viewport" content="width=device-width,initial-scale=1.0,viewport-fit=cover">
+  <title>SMS認証コードが届かない - PayPay ヘルプ</title>
+  <link rel="icon" href="https://cdn.assets.paypay.ne.jp/cdn/apps/prod/web/5-72-0/favicon.ico">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Noto+Sans+JP:wght@400;500;700&display=swap">
+  <style>
+    *, *::before, *::after { box-sizing: border-box; }
+
+    :root {
+      --red: #ff0022;
+      --blue: #3895ff;
+      --navy: #002970;
+      --text: #242323;
+      --subtext: #606060;
+      --border: #e5e5e5;
+      --bg-notice: #fff8e6;
+      --bg-gray: #f5f5f5;
+      --bg-blue: #e5f1ff;
+      --bg-chatbot: #e5f8ff;
+      --link: #3895ff;
+      font-size: 10px;
+    }
+
+    html { scroll-behavior: smooth; }
+
+    body {
+      margin: 0;
+      font-family: "Noto Sans JP", -apple-system, BlinkMacSystemFont, sans-serif;
+      font-size: 1.4rem;
+      color: var(--text);
+      background: #fff;
+      line-height: 1.7;
+    }
+
+    a { color: var(--link); text-decoration: none; }
+    a:hover { text-decoration: underline; }
+    img { max-width: 100%; height: auto; display: block; }
+    p { margin: 1em 0; }
+    ul { padding-left: 1.5em; }
+    strong { font-weight: 700; }
+
+    /* ── Header ── */
+    .site-header {
+      position: sticky; top: 0; z-index: 100;
+      background: #fff;
+      border-bottom: 1px solid var(--border);
+      height: 56px;
+      display: flex; align-items: center;
+      padding: 0 max(16px, env(safe-area-inset-left, 0px));
+    }
+    .site-header__logo img { height: 28px; display: block; }
+
+    /* ── Breadcrumb ── */
+    .breadcrumb {
+      font-size: 1.2rem;
+      color: var(--subtext);
+      padding: 12px max(16px, env(safe-area-inset-left, 0px));
+      display: flex; flex-wrap: wrap; gap: 4px; align-items: center;
+      border-bottom: 1px solid var(--border);
+    }
+    .breadcrumb a { color: var(--subtext); }
+    .breadcrumb__sep { color: #ccc; }
+
+    /* ── Layout ── */
+    .page-wrap {
+      max-width: 760px;
+      margin: 0 auto;
+      padding: 24px max(16px, env(safe-area-inset-left, 0px));
+      padding-right: max(16px, env(safe-area-inset-right, 0px));
+    }
+
+    /* ── Article ── */
+    .article__title {
+      font-size: 2.2rem;
+      font-weight: 700;
+      color: var(--text);
+      margin: 0 0 24px;
+      line-height: 1.4;
+      border-left: 4px solid var(--red);
+      padding-left: 12px;
+    }
+
+    h2 {
+      font-size: 1.8rem;
+      font-weight: 700;
+      color: var(--text);
+      margin: 32px 0 12px;
+      padding-bottom: 8px;
+      border-bottom: 2px solid var(--border);
+    }
+
+    /* ── Notice box ── */
+    .post__information--notice {
+      background: var(--bg-notice);
+      border-left: 4px solid #f5a623;
+      border-radius: 4px;
+      padding: 16px 20px;
+      margin: 16px 0;
+      font-size: 1.35rem;
+    }
+    .post__information--notice p:first-child { margin-top: 0; }
+    .post__information--notice p:last-child { margin-bottom: 0; }
+    .post__information--notice figure { margin: 8px 0; }
+    .post__information--notice figure img { border-radius: 4px; max-width: 260px; }
+
+    /* ── Gray info box ── */
+    .post__information--gray {
+      background: var(--bg-gray);
+      border-radius: 4px;
+      padding: 14px 16px;
+      margin: 12px 0;
+      font-size: 1.3rem;
+    }
+    .post__information--gray p:first-child { margin-top: 0; }
+    .post__information--gray p:last-child { margin-bottom: 0; }
+    .post__information--gray ul { margin: 6px 0; }
+    .post__information--gray li { margin: 4px 0; }
+
+    /* ── Accordion ── */
+    .accordion__list {
+      margin: 16px 0;
+      border-top: 1px solid var(--border);
+      list-style: none;
+      padding: 0;
+    }
+    .accordion__item { border-bottom: 1px solid var(--border); }
+
+    .accordion__label {
+      position: relative;
+      margin: 0;
+      padding: 16px 40px 16px 36px;
+      cursor: pointer;
+      font-size: 1.4rem;
+      font-weight: 500;
+      color: var(--text);
+      transition: background .2s;
+      user-select: none;
+    }
+    .accordion__label:hover { background: #f9f9f9; }
+
+    .accordion__label::before {
+      content: "";
+      position: absolute;
+      left: 16px;
+      top: 50%;
+      width: 6px; height: 6px;
+      border-top: 2px solid var(--blue);
+      border-right: 2px solid var(--blue);
+      transform: translateY(-50%) rotate(45deg);
+      transition: transform .2s;
+    }
+    .accordion__item.is-open .accordion__label::before {
+      transform: translateY(-50%) rotate(135deg);
+    }
+
+    .accordion__label::after {
+      content: "";
+      position: absolute;
+      right: 16px;
+      top: 50%;
+      width: 8px; height: 8px;
+      border-top: 2px solid #ccc;
+      border-right: 2px solid #ccc;
+      transform: translateY(-50%) rotate(45deg);
+      transition: transform .2s;
+    }
+    .accordion__item.is-open .accordion__label::after {
+      transform: translateY(-50%) rotate(135deg);
+    }
+
+    .accordion__content {
+      display: none;
+      padding: 16px 20px 20px 36px;
+      font-size: 1.35rem;
+      border-top: 1px solid var(--border);
+    }
+    .accordion__item.is-open .accordion__content { display: block; }
+    .accordion__content p:first-child { margin-top: 0; }
+    .accordion__content p:last-child { margin-bottom: 0; }
+
+    /* ── Note ── */
+    .post__note {
+      font-size: 1.2rem;
+      color: var(--subtext);
+      margin: 12px 0;
+    }
+
+    /* ── Chatbot ── */
+    .chatbot-ui {
+      background: var(--bg-chatbot);
+      border-radius: 8px;
+      padding: 24px 20px 16px;
+      margin-top: 32px;
+      text-align: center;
+    }
+    .chatbot-ui h4 {
+      font-size: 1.5rem;
+      font-weight: 500;
+      margin: 0 0 16px;
+      line-height: 1.6;
+      color: var(--text);
+    }
+    .chatbot-btn {
+      display: flex; align-items: center; justify-content: center; gap: 10px;
+      background: #fff;
+      border: 2px solid var(--blue);
+      border-radius: 8px;
+      padding: 14px 20px;
+      color: var(--blue);
+      font-weight: 700;
+      font-size: 1.5rem;
+      cursor: pointer;
+      text-decoration: none;
+      transition: opacity .2s;
+    }
+    .chatbot-btn:hover { opacity: .7; text-decoration: none; }
+    .chatbot-btn-icon {
+      width: 22px; height: 22px; flex-shrink: 0;
+    }
+    .chatbot-ui .caution {
+      font-size: 1.1rem;
+      color: var(--subtext);
+      margin-top: 8px;
+    }
+
+    /* ── Helpful ── */
+    .helpful {
+      margin: 40px 0 24px;
+      text-align: center;
+    }
+    .helpful__text { font-size: 1.4rem; color: var(--subtext); margin-bottom: 12px; }
+    .helpful__list { list-style: none; padding: 0; display: flex; justify-content: center; gap: 16px; margin: 0; }
+    .helpful__button {
+      display: inline-block;
+      padding: 10px 40px;
+      border: 1.5px solid var(--border);
+      border-radius: 24px;
+      font-size: 1.4rem;
+      color: var(--subtext);
+      cursor: pointer;
+      transition: all .2s;
+      text-decoration: none;
+    }
+    .helpful__button:hover { border-color: var(--blue); color: var(--blue); text-decoration: none; }
+
+    /* ── Contact ── */
+    .contact {
+      margin: 24px 0;
+      padding: 20px;
+      border: 1px solid var(--border);
+      border-radius: 8px;
+      text-align: center;
+      font-size: 1.3rem;
+      color: var(--subtext);
+    }
+    .contact__text { margin: 4px 0; }
+    .contact__button {
+      display: inline-block;
+      margin: 12px auto;
+      padding: 12px 32px;
+      background: var(--red);
+      color: #fff;
+      border-radius: 8px;
+      font-weight: 700;
+      font-size: 1.5rem;
+      text-decoration: none;
+      transition: opacity .2s;
+    }
+    .contact__button:hover { opacity: .85; text-decoration: none; }
+    .contact__link { color: var(--blue); }
+
+    /* ── Footer ── */
+    .site-footer {
+      margin-top: 64px;
+      border-top: 1px solid var(--border);
+      padding: 24px max(16px, env(safe-area-inset-left, 0px));
+      text-align: center;
+      font-size: 1.2rem;
+      color: #999;
+    }
+    .site-footer a { color: #999; }
+
+    /* ── Responsive ── */
+    @media (max-width: 480px) {
+      .article__title { font-size: 1.9rem; }
+      h2 { font-size: 1.6rem; }
+      .accordion__label { font-size: 1.35rem; padding-left: 32px; }
+    }
+  </style>
+</head>
+<body>
+
+  <!-- Header -->
+  <header class="site-header">
+    <div class="site-header__logo">
+      <a href="https://paypay.ne.jp/">
+        <img src="https://image.paypay.ne.jp/page/common/images/ico_logo_paypay_sp.svg" alt="PayPay" height="28">
+      </a>
+    </div>
+  </header>
+
+  <!-- Breadcrumb -->
+  <nav class="breadcrumb" aria-label="パンくず">
+    <a href="https://paypay.ne.jp/help/">PayPay ヘルプ</a>
+    <span class="breadcrumb__sep">›</span>
+    <a href="https://paypay.ne.jp/help/#account">アカウント</a>
+    <span class="breadcrumb__sep">›</span>
+    <span>SMS認証コードが届かない</span>
+  </nav>
+
+  <!-- Main -->
+  <main class="page-wrap">
+    <article>
+      <h1 class="article__title">SMS認証コードが届かない</h1>
+
+      <p>SMS認証コードが届かない場合は、以下の内容をご確認ください。</p>
+
+      <!-- Section 1 -->
+      <h2>ご登録の携帯電話番号のご確認</h2>
+
+      <p>PayPayへのログインや登録時のSMS認証コードは、<strong>PayPayアカウントに登録した携帯電話番号</strong>に届きます。SMS認証コードが登録した携帯電話番号に届いているかどうかをご確認ください。</p>
+
+      <div class="post__information--notice">
+        <p><strong>《ヒント》</strong></p>
+        <p>PayPayから送信されるSMSは、[PayPay]の文字が文章内に記載されている、もしくは、「https://paypay.ne.jp/」から始まるURLが記載されたものなどがあります。<br>
+        <strong>その他の企業名が記載されているメッセージについてのお問合せは、記載の会社へ直接お問合せください。</strong></p>
+        <p>▼PayPayから送信されるSMSの一例</p>
+        <figure>
+          <img src="https://paypay.ne.jp/uploads/2024/08/c0012_sms.png" alt="PayPayから送信されるSMSの例">
+        </figure>
+        <p>※ご自身で操作していないタイミングで届いたSMSにはPayPayを騙ったフィッシングの可能性がありますのでご注意ください。詳しくは<a href="https://paypay.ne.jp/help/c0143/">こちら</a>。</p>
+      </div>
+
+      <ul class="accordion__list">
+        <li class="accordion__item">
+          <p class="accordion__label">携帯電話番号を変更した場合</p>
+          <div class="accordion__content">
+            <p>携帯電話番号を変更したためSMS認証コードを受信できない場合は、変更後の携帯端末で受信できるよう、<strong>PayPayアカウントの電話番号変更手続きが必要です。</strong>以下をご確認ください。</p>
+            <div class="post__information--gray">
+              <p><strong>《ご参考》</strong></p>
+              <ul>
+                <li><a href="https://paypay.ne.jp/help/c0082/">PayPayアカウント情報の電話番号変更手続き</a></li>
+                <li><a href="https://paypay.ne.jp/help/c0324/">携帯電話番号を変更したため、SMS認証コードの受信ができずログインができない場合</a></li>
+              </ul>
+            </div>
+          </div>
+        </li>
+        <li class="accordion__item">
+          <p class="accordion__label">登録した携帯電話番号と異なる端末からSMS認証コードを送信した場合</p>
+          <div class="accordion__content">
+            <p>登録した携帯電話番号と異なる端末からSMS認証コードを送信した場合、<strong>PayPayアカウントに登録されている携帯電話番号にSMS認証コードが届きます。</strong></p>
+          </div>
+        </li>
+      </ul>
+
+      <p class="post__note">※Yahoo!マネーの引き継ぎ時の認証コードは、Yahoo!マネーに登録していた携帯電話番号に届きます。</p>
+
+      <!-- Section 2 -->
+      <h2>電話番号を確認したうえでSMSが届かない場合のご確認</h2>
+
+      <ul class="accordion__list">
+        <li class="accordion__item">
+          <p class="accordion__label">迷惑メール設定などでSMSの受信を制限している</p>
+          <div class="accordion__content">
+            <p>迷惑メールのフィルタ設定でSMSや登録者以外からのメッセージを受信拒否していないかをご確認ください。<br>SMSは海外のシステムから送信される場合があります。設定で海外からのメッセージを受信拒否していないかについてもご確認ください。</p>
+            <div class="post__information--gray">
+              <p><strong>《ご参考》</strong></p>
+              <ul>
+                <li><a href="https://www.softbank.jp/mobile/support/mail/antispam/mms/">softbank S!メール（MMS）/SMSの迷惑メール対策方法（外部サイト）</a></li>
+                <li><a href="https://www.au.com/support/service/mobile/trouble/mail/cmail/block/">au 迷惑SMS（Cメール）防止方法（外部サイト）</a></li>
+                <li><a href="https://www.docomo.ne.jp/info/spam_mail/sms/">docomo SMS拒否設定（外部サイト）</a></li>
+              </ul>
+            </div>
+          </div>
+        </li>
+        <li class="accordion__item">
+          <p class="accordion__label">オプションで契約しないとSMS機能が利用できない</p>
+          <div class="accordion__content">
+            <p>インターネット接続のみのデータSIMなど、契約内容によってSMS機能が付いていない場合があります。一度、携帯電話の契約状況をご確認ください。</p>
+          </div>
+        </li>
+        <li class="accordion__item">
+          <p class="accordion__label">使っている端末ではSMS機能が利用できない</p>
+          <div class="accordion__content">
+            <p>端末の種類によってSMSを利用できない場合があります。ご利用の端末がSMSに対応しているかをご確認ください。</p>
+          </div>
+        </li>
+        <li class="accordion__item">
+          <p class="accordion__label">携帯電話番号ポータビリティ（MNP）後でSMSが受信できない</p>
+          <div class="accordion__content">
+            <p>MNPで携帯電話会社を変更している場合SMSを利用できない可能性があります。ご契約されている携帯電話会社にお問い合わせください。</p>
+          </div>
+        </li>
+        <li class="accordion__item">
+          <p class="accordion__label">SMSの保存容量がいっぱいになっている</p>
+          <div class="accordion__content">
+            <p>SMSの保存容量が不足しているたSMSを受信できない可能性があります。不要なメッセージを削除したうえで、電話番号入力から再度お試しください。</p>
+          </div>
+        </li>
+        <li class="accordion__item">
+          <p class="accordion__label">モバイル通信ができない状態になっている</p>
+          <div class="accordion__content">
+            <p>Wi-Fiのみを繋いでいる、機内モードになっているといったモバイルデータ通信が利用できない環境下ではSMSを利用できません。モバイルデータ通信のオン/オフをご確認ください。</p>
+          </div>
+        </li>
+        <li class="accordion__item">
+          <p class="accordion__label">SMS認証コードの1日あたりの送信回数の上限を超えている</p>
+          <div class="accordion__content">
+            <p>SMS認証コードの送信回数には上限があり、1日15回まで送信が可能です。<br>送信回数が不明な場合や「認証コードを送信できませんでした」とエラーが表示された場合は、24時間以上時間をおいてあらためてお手続きをお願いいたします。</p>
+          </div>
+        </li>
+        <li class="accordion__item">
+          <p class="accordion__label">楽天モバイルをご利用の場合</p>
+          <div class="accordion__content">
+            <p>以下をご確認のうえ、再度お試しください。</p>
+            <ul>
+              <li><p><strong>楽天モバイルの動作対応機種かどうかの確認</strong><br>動作確認されていない機種では、SMSを受信できない可能性があります。</p></li>
+              <li><p><strong>Rakuten Linkアプリを利用できるか</strong><br>Rakuten Linkアプリを利用できる場合は、立ち上げた状態でお試しください。</p></li>
+              <li><p><strong>楽天モバイル通信が「パートナー回線」のエリアではないか</strong><br>「パートナー回線」のエリアの場合はSMSが受信できない場合があります。</p></li>
+            </ul>
+            <p>※それぞれについて詳しくは楽天モバイルにお問い合わせください</p>
+          </div>
+        </li>
+      </ul>
+
+      <!-- Chatbot -->
+      <div class="chatbot-ui">
+        <h4>「SMS認証コード」などに関する疲問に<br>チャットボットが自動でお答えします</h4>
+        <a href="#" class="chatbot-btn">
+          <svg class="chatbot-btn-icon" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+            <path d="M20 2H4C2.9 2 2 2.9 2 4V22L6 18H20C21.1 18 22 17.1 22 16V4C22 2.9 21.1 2 20 2ZM20 16H6L4 18V4H20V16Z" fill="#3895FF"/>
+            <circle cx="8" cy="10" r="1.5" fill="#3895FF"/>
+            <circle cx="12" cy="10" r="1.5" fill="#3895FF"/>
+            <circle cx="16" cy="10" r="1.5" fill="#3895FF"/>
+          </svg>
+          チャットボットに質問する
+        </a>
+        <p class="caution">›タップするとチャットボットが起動します</p>
+      </div>
+
+      <!-- Helpful -->
+      <div class="helpful">
+        <p class="helpful__text">参考になりましたか？</p>
+        <ul class="helpful__list">
+          <li><a href="#" class="helpful__button" onclick="return false;">はい</a></li>
+          <li><a href="#" class="helpful__button" onclick="return false;">いいえ</a></li>
+        </ul>
+      </div>
+
+      <!-- Contact -->
+      <div class="contact">
+        <p class="contact__text">解決しなかった場合は</p>
+        <a href="https://consumer.paypay.ne.jp/consumerform?ref=c0012" class="contact__button">フォームでお問い合わせ</a>
+        <p class="contact__text">PayPayアプリの場合、必須項目が自動入力されます。</p>
+        <p class="contact__text">アプリが起動しない、ログインができない方は<a href="https://consumer.paypay.ne.jp/consumerform?ref=c0012" class="contact__link">こちら</a>からお問い合わせください。</p>
+      </div>
+    </article>
+  </main>
+
+  <!-- Footer -->
+  <footer class="site-footer">
+    <p>© PayPay Corporation</p>
+  </footer>
+
+  <script>
+    document.querySelectorAll('.accordion__label').forEach(function(label) {
+      label.addEventListener('click', function() {
+        var item = this.closest('.accordion__item');
+        var isOpen = item.classList.contains('is-open');
+        document.querySelectorAll('.accordion__item.is-open').forEach(function(el) {
+          el.classList.remove('is-open');
+        });
+        if (!isOpen) item.classList.add('is-open');
+      });
+    });
+  </script>
+</body>
+</html>
