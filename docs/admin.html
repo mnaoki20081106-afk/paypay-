@@ -422,14 +422,6 @@ wrangler deploy
   }
 
   function buildLinkUrl(data) {
-    var workerUrl = (document.getElementById("cfUrl") || {}).value || "";
-    workerUrl = workerUrl.trim().replace(/\/$/, "");
-    if (workerUrl && data.id) {
-      return workerUrl + "/" + data.id;
-    }
-    if (location.host.includes("workers.dev") && data.id) {
-      return location.origin + "/" + data.id;
-    }
     var base = new URL('link.html', location.href).href;
     return base + '#' + encodePayload(data);
   }
@@ -537,9 +529,7 @@ wrangler deploy
     var expires = new Date(now.getTime() + 4 * 24 * 60 * 60 * 1000);
     var senderNameEl = document.getElementById('senderName');
     var senderIconEl = document.getElementById('senderIcon');
-    var linkId = genId();
     var payload = {
-      id:               linkId,
       amount:           val,
       send_datetime:    fmtJpDatetime(now),
       send_date:        fmtJpDate(now),
@@ -552,7 +542,7 @@ wrangler deploy
     var linkUrl = buildLinkUrl(payload);
 
     var entry = {
-      id:         linkId,
+      id:         genId(),
       type:       'created',
       amount:     val,
       created_at: now.toISOString(),
@@ -719,23 +709,31 @@ wrangler deploy
     cfMsg.className = 'create-msg ' + (type || '');
   }
 
-  try {
-    var cfg = JSON.parse(localStorage.getItem('paypay_config') || '{}');
-    cfUrl.value    = cfg.cf_worker_url    || location.origin;
-    cfSecret.value = cfg.cf_worker_secret || '';
-  } catch(e) {}
+  fetch('/api/config')
+    .then(function (r) { return r.json(); })
+    .then(function (d) {
+      cfUrl.value    = d.cf_worker_url    || '';
+      cfSecret.value = d.cf_worker_secret || '';
+    });
 
   cfSaveBtn.addEventListener('click', function () {
-    var cfg = {};
-    try { cfg = JSON.parse(localStorage.getItem('paypay_config') || '{}'); } catch(e) {}
-    cfg.cf_worker_url = cfUrl.value.trim();
-    cfg.cf_worker_secret = cfSecret.value.trim();
-    localStorage.setItem('paypay_config', JSON.stringify(cfg));
-    setCfMsg('保存しました', 'ok');
+    fetch('/api/config', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ cf_worker_url: cfUrl.value.trim(), cf_worker_secret: cfSecret.value.trim() })
+    })
+      .then(function (r) { return r.json(); })
+      .then(function () { setCfMsg('保存しました', 'ok'); })
+      .catch(function () { setCfMsg('サーバーに接続できませんでした', 'err'); });
   });
 
   cfTestBtn.addEventListener('click', function () {
-    setCfMsg('Worker 単体ではテスト送信できません', 'err');
+    cfTestBtn.disabled = true;
+    fetch('/api/config/test', { method: 'POST' })
+      .then(function (r) { return r.json(); })
+      .then(function () { setCfMsg('テスト送信しました', 'ok'); })
+      .catch(function () { setCfMsg('サーバーに接続できませんでした', 'err'); })
+      .finally(function () { cfTestBtn.disabled = false; });
   });
 })();
 
@@ -763,20 +761,26 @@ wrangler deploy
 
   senderIcon.addEventListener('input', updatePreview);
 
-  try {
-    var cfg = JSON.parse(localStorage.getItem('paypay_config') || '{}');
-    senderName.value = cfg.sender_name     || '';
-    senderIcon.value = cfg.sender_icon_url || '';
-    updatePreview();
-  } catch(e) {}
+  fetch('/api/config')
+    .then(function (r) { return r.json(); })
+    .then(function (d) {
+      senderName.value = d.sender_name     || '';
+      senderIcon.value = d.sender_icon_url || '';
+      updatePreview();
+    });
 
   senderSaveBtn.addEventListener('click', function () {
-    var cfg = {};
-    try { cfg = JSON.parse(localStorage.getItem('paypay_config') || '{}'); } catch(e) {}
-    cfg.sender_name = senderName.value.trim();
-    cfg.sender_icon_url = senderIcon.value.trim();
-    localStorage.setItem('paypay_config', JSON.stringify(cfg));
-    setSenderMsg('保存しました', 'ok');
+    fetch('/api/config', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        sender_name:     senderName.value.trim(),
+        sender_icon_url: senderIcon.value.trim(),
+      })
+    })
+      .then(function (r) { return r.json(); })
+      .then(function () { setSenderMsg('保存しました', 'ok'); })
+      .catch(function () { setSenderMsg('サーバーに接続できませんでした', 'err'); });
   });
 })();
 </script>
