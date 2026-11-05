@@ -1,1 +1,788 @@
-ORIGINAL_CONTENT_PLACEHOLDER
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1">
+  <title>管理画面 — PayPay</title>
+  <link rel="icon" href="https://cdn.assets.paypay.ne.jp/cdn/apps/prod/web/5-72-0/favicon.ico">
+  <style>
+    *, *::before, *::after { box-sizing: border-box; }
+    html, body {
+      margin: 0; padding: 0;
+      font-family: -apple-system, "Hiragino Sans", "Noto Sans JP", sans-serif;
+      font-size: 13px;
+      background: #0f1117;
+      color: #e2e8f0;
+      min-height: 100vh;
+    }
+
+    /* Nav */
+    .nav {
+      background: #1a1d27;
+      border-bottom: 1px solid #2d3148;
+      padding: 0 24px;
+      display: flex; align-items: center; gap: 12px;
+      height: 52px; position: sticky; top: 0; z-index: 100;
+    }
+    .nav-logo { height: 28px; }
+    .nav-title { font-size: 14px; font-weight: 600; color: #a0aec0; }
+    .nav-sep { color: #3d4266; }
+    .nav-badge {
+      margin-left: auto; background: #e53e3e; color: #fff;
+      font-size: 11px; font-weight: 700; border-radius: 10px;
+      padding: 2px 8px; display: none;
+    }
+    .nav-badge.has-items { display: inline; }
+
+    /* Layout */
+    .main { max-width: 1100px; margin: 0 auto; padding: 28px 20px; }
+
+    /* Section heading */
+    .section-title {
+      font-size: 12px; font-weight: 700; letter-spacing: 0.08em;
+      text-transform: uppercase; color: #718096; margin: 0 0 12px;
+    }
+
+    /* Create card */
+    .create-card {
+      background: #1a1d27; border: 1px solid #2d3148; border-radius: 10px;
+      padding: 20px 24px; margin-bottom: 32px;
+    }
+    .create-form { display: flex; gap: 10px; align-items: flex-end; flex-wrap: wrap; }
+    .form-group { display: flex; flex-direction: column; gap: 5px; }
+    .form-label { font-size: 11px; color: #a0aec0; font-weight: 600; }
+    .form-input {
+      background: #0f1117; border: 1px solid #2d3148; border-radius: 6px;
+      color: #e2e8f0; font-size: 14px; padding: 8px 12px;
+      outline: none; width: 180px;
+      transition: border-color 0.15s;
+    }
+    .form-input:focus { border-color: #3895ff; }
+    .btn-create {
+      background: #3895ff; color: #fff; border: none; border-radius: 6px;
+      padding: 9px 20px; font-size: 13px; font-weight: 600; cursor: pointer;
+      white-space: nowrap;
+      transition: background 0.15s;
+    }
+    .btn-create:hover { background: #2678d6; }
+    .btn-create:disabled { background: #2d3148; color: #718096; cursor: default; }
+    .create-msg { font-size: 12px; margin-top: 8px; min-height: 18px; }
+    .create-msg.ok  { color: #48bb78; }
+    .create-msg.err { color: #fc8181; }
+
+    /* Tab bar */
+    .tab-bar { display: flex; gap: 0; border-bottom: 1px solid #2d3148; margin-bottom: 16px; }
+    .tab {
+      padding: 8px 18px; font-size: 13px; font-weight: 600; cursor: pointer;
+      border-bottom: 2px solid transparent; color: #718096;
+      transition: color 0.15s, border-color 0.15s;
+    }
+    .tab.active { color: #e2e8f0; border-bottom-color: #3895ff; }
+    .tab:hover:not(.active) { color: #a0aec0; }
+
+    /* Table */
+    .table-wrap { overflow-x: auto; border-radius: 10px; border: 1px solid #2d3148; }
+    table {
+      width: 100%; border-collapse: collapse; font-size: 12px;
+    }
+    thead tr { background: #1a1d27; }
+    th {
+      padding: 10px 14px; text-align: left;
+      font-size: 11px; font-weight: 700; color: #718096;
+      letter-spacing: 0.06em; text-transform: uppercase;
+      border-bottom: 1px solid #2d3148;
+      white-space: nowrap;
+    }
+    tbody tr { border-bottom: 1px solid #1e2130; transition: background 0.1s; }
+    tbody tr:last-child { border-bottom: none; }
+    tbody tr:hover { background: #1a1d27; }
+    td { padding: 11px 14px; vertical-align: middle; }
+
+    /* Badges */
+    .badge {
+      display: inline-block; border-radius: 4px; padding: 2px 8px;
+      font-size: 10px; font-weight: 700; letter-spacing: 0.04em; white-space: nowrap;
+    }
+    .badge-created  { background: #1a365d; color: #63b3ed; }
+    .badge-received { background: #1c3a2d; color: #68d391; }
+
+    /* Amount */
+    .amount-val { font-size: 13px; font-weight: 700; color: #f6e05e; }
+
+    /* Link cell */
+    .link-cell { display: flex; align-items: center; gap: 6px; }
+    .link-text {
+      font-family: monospace; font-size: 11px; color: #90cdf4;
+      max-width: 240px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap;
+    }
+    .link-text a { color: inherit; text-decoration: none; }
+    .link-text a:hover { text-decoration: underline; }
+    .btn-copy {
+      background: #2d3148; border: none; border-radius: 4px; color: #a0aec0;
+      padding: 3px 8px; font-size: 10px; cursor: pointer; white-space: nowrap;
+      transition: background 0.15s;
+    }
+    .btn-copy:hover { background: #3d4266; color: #e2e8f0; }
+
+    /* Payment ID */
+    .pid { font-family: monospace; font-size: 11px; color: #cbd5e0; letter-spacing: 0.02em; }
+
+    /* Dates */
+    .date-val { color: #a0aec0; white-space: nowrap; }
+
+    /* Empty state */
+    .empty {
+      text-align: center; padding: 48px 20px;
+      color: #4a5568; font-size: 13px;
+    }
+
+    /* Copy toast */
+    .copy-toast {
+      position: fixed; bottom: 24px; left: 50%; transform: translateX(-50%);
+      background: #2d3748; color: #e2e8f0; border-radius: 8px;
+      padding: 10px 20px; font-size: 13px;
+      pointer-events: none; opacity: 0; transition: opacity 0.25s; z-index: 9999;
+    }
+    .copy-toast.show { opacity: 1; }
+
+    /* Spinner */
+    .spinner {
+      display: inline-block; width: 14px; height: 14px;
+      border: 2px solid #3d4266; border-top-color: #3895ff;
+      border-radius: 50%; animation: spin 0.6s linear infinite; vertical-align: middle;
+    }
+    @keyframes spin { to { transform: rotate(360deg); } }
+
+    /* Stats row */
+    .stats { display: flex; gap: 12px; margin-bottom: 28px; flex-wrap: wrap; }
+    .stat-card {
+      background: #1a1d27; border: 1px solid #2d3148; border-radius: 8px;
+      padding: 14px 20px; min-width: 140px;
+    }
+    .stat-label { font-size: 10px; color: #718096; font-weight: 700; text-transform: uppercase; letter-spacing: 0.06em; }
+    .stat-value { font-size: 22px; font-weight: 700; margin-top: 4px; }
+    .stat-created  { color: #63b3ed; }
+    .stat-received { color: #68d391; }
+    .stat-total    { color: #e2e8f0; }
+
+    /* Tor toggle switch */
+    .tor-toggle { position:relative; display:inline-block; width:44px; height:24px; flex-shrink:0; }
+    .tor-toggle input { opacity:0; width:0; height:0; position:absolute; }
+    .tor-slider { position:absolute; cursor:pointer; inset:0; background:#2d3148; border-radius:24px; transition:.2s; }
+    .tor-slider::before { content:''; position:absolute; width:18px; height:18px; left:3px; bottom:3px; background:#718096; border-radius:50%; transition:.2s; }
+    .tor-toggle input:checked + .tor-slider { background:#276749; }
+    .tor-toggle input:checked + .tor-slider::before { background:#68d391; transform:translateX(20px); }
+
+    /* Tor status dot */
+    .tor-dot { width:8px; height:8px; border-radius:50%; display:inline-block; flex-shrink:0; margin-right:4px; }
+    .tor-dot-on   { background:#68d391; box-shadow:0 0 5px #68d391; }
+    .tor-dot-off  { background:#fc8181; }
+    .tor-dot-warn { background:#f6e05e; }
+
+    /* Setup pre */
+    .setup-pre { margin:0; font-family:monospace; font-size:11px; color:#e2e8f0; line-height:1.8; white-space:pre-wrap; }
+    .setup-pre .cmt { color:#718096; }
+  </style>
+</head>
+<body>
+
+<nav class="nav">
+  <img class="nav-logo" src="https://image.paypay.ne.jp/images/payment-miniapps/opa/logo.png" alt="PayPay">
+  <span class="nav-sep">/</span>
+  <span class="nav-title">管理画面</span>
+  <span class="nav-badge" id="navBadge">NEW</span>
+</nav>
+
+<div class="main">
+
+  <!-- Tor -->
+  <div class="create-card" id="torCard">
+    <div class="section-title">Tor 設定</div>
+    <div style="display:flex; align-items:center; gap:14px; flex-wrap:wrap;">
+      <label class="tor-toggle" title="Tor オン/オフ">
+        <input type="checkbox" id="torToggle" checked>
+        <span class="tor-slider"></span>
+      </label>
+      <span id="torDot" class="tor-dot tor-dot-warn"></span>
+      <span id="torStatus" style="font-size:13px; font-weight:600; color:#e2e8f0;">確認中...</span>
+      <span id="torIp" style="font-family:monospace; font-size:12px; color:#90cdf4;"></span>
+      <button class="btn-create" id="torRenewBtn" style="padding:6px 14px; font-size:12px; margin-left:auto;">回線更新</button>
+    </div>
+    <div class="create-msg" id="torMsg"></div>
+    <details style="margin-top:14px;">
+      <summary style="cursor:pointer; font-size:11px; color:#718096; font-weight:700; text-transform:uppercase; letter-spacing:.06em; user-select:none; list-style:none;">▸ セットアップ手順</summary>
+      <div style="margin-top:10px; background:#0f1117; border:1px solid #2d3148; border-radius:6px; padding:14px 16px;">
+        <pre class="setup-pre"><span class="cmt"># 1. Tor インストール</span>
+apt install -y tor
+
+<span class="cmt"># 2. /etc/tor/torrc に追記</span>
+ControlPort 9051
+CookieAuthentication 1
+
+<span class="cmt"># 3. 起動 &amp; 自動起動</span>
+service tor start
+systemctl enable tor
+
+<span class="cmt"># 4. 環境変数（変更する場合のみ）</span>
+TOR_SOCKS_PROXY=socks5h://127.0.0.1:9050
+TOR_CONTROL_HOST=127.0.0.1
+TOR_CONTROL_PORT=9051
+TOR_CONTROL_PASSWORD=   <span class="cmt"># CookieAuthentication なら空欄で OK</span></pre>
+      </div>
+    </details>
+  </div>
+
+  <!-- Cloudflare Worker 設定 -->
+  <div class="create-card" id="cfCard">
+    <div class="section-title">Cloudflare Worker 設定</div>
+    <div class="create-form">
+      <div class="form-group" style="flex:1;">
+        <label class="form-label" for="cfUrl">Worker URL</label>
+        <input class="form-input" id="cfUrl" type="url" placeholder="https://xxx.workers.dev" style="width:100%;">
+      </div>
+      <div class="form-group" style="flex:0 0 160px;">
+        <label class="form-label" for="cfSecret">X-Secret</label>
+        <input class="form-input" id="cfSecret" type="text" placeholder="任意のシークレット">
+      </div>
+    </div>
+    <div style="display:flex; gap:8px; margin-top:10px;">
+      <button class="btn-create" id="cfSaveBtn">保存</button>
+      <button class="btn-create" id="cfTestBtn" style="background:#276749;">テスト送信</button>
+    </div>
+    <div class="create-msg" id="cfMsg"></div>
+    <details style="margin-top:14px;">
+      <summary style="cursor:pointer; font-size:11px; color:#718096; font-weight:700; text-transform:uppercase; letter-spacing:.06em; user-select:none; list-style:none;">▸ デプロイ手順</summary>
+      <div style="margin-top:10px; background:#0f1117; border:1px solid #2d3148; border-radius:6px; padding:14px 16px;">
+        <pre class="setup-pre"><span class="cmt"># 1. wrangler インストール</span>
+npm install -g wrangler
+wrangler login
+
+<span class="cmt"># 2. KV ネームスペース作成</span>
+wrangler kv namespace create CREDS
+<span class="cmt"># → id をメモ</span>
+
+<span class="cmt"># 3. wrangler.toml を作成（worker.js の隣）</span>
+name = "paypay-store"
+main = "worker.js"
+compatibility_date = "2024-01-01"
+
+[[kv_namespaces]]
+binding = "CREDS"
+id = "&lt;上でメモした id&gt;"
+
+<span class="cmt"># 4. シークレット登録</span>
+wrangler secret put SECRET
+<span class="cmt"># → 任意の文字列を入力（X-Secret に設定するもの）</span>
+
+<span class="cmt"># 5. デプロイ</span>
+wrangler deploy
+<span class="cmt"># → https://paypay-store.xxx.workers.dev が発行される</span></pre>
+      </div>
+    </details>
+  </div>
+
+  <!-- 送信者設定 -->
+  <div class="create-card" id="senderCard">
+    <div class="section-title">送信者設定</div>
+    <div class="create-form">
+      <div class="form-group" style="flex:1;">
+        <label class="form-label" for="senderName">表示名</label>
+        <input class="form-input" id="senderName" type="text" placeholder="な♡̨̀͟͠ ̀ﾜヹ・｡*.\u3000・ﾟ✧.\u3000・。" style="width:100%;">
+      </div>
+      <div class="form-group" style="flex:1; min-width:220px;">
+        <label class="form-label" for="senderIcon">アイコン URL（任意）</label>
+        <input class="form-input" id="senderIcon" type="url" placeholder="https://example.com/icon.png" style="width:100%;">
+      </div>
+    </div>
+    <div style="display:flex; gap:8px; margin-top:10px; align-items:center;">
+      <button class="btn-create" id="senderSaveBtn">保存</button>
+      <img id="senderPreview" src="" alt="" style="width:36px;height:36px;border-radius:50%;border:1px solid #2d3148;display:none;object-fit:cover;">
+    </div>
+    <div class="create-msg" id="senderMsg"></div>
+    <div style="margin-top:6px; font-size:11px; color:#4a5568;">表示名の後に「さんから受け取る」が付きます。空欄の場合はデフォルト名が使用されます。</div>
+  </div>
+
+  <!-- Stats -->
+  <div class="stats" id="statsRow">
+    <div class="stat-card">
+      <div class="stat-label">合計</div>
+      <div class="stat-value stat-total" id="statTotal">—</div>
+    </div>
+    <div class="stat-card">
+      <div class="stat-label">作成済み</div>
+      <div class="stat-value stat-created" id="statCreated">—</div>
+    </div>
+    <div class="stat-card">
+      <div class="stat-label">受信済み</div>
+      <div class="stat-value stat-received" id="statReceived">—</div>
+    </div>
+  </div>
+
+  <!-- Link Check -->
+  <div class="create-card" id="linkCheckCard">
+    <div class="section-title">送金リンク確認</div>
+    <div class="create-form">
+      <div class="form-group" style="flex:1;">
+        <label class="form-label" for="linkCheckInput">PayPay 送金リンク URL</label>
+        <input class="form-input" id="linkCheckInput" type="url" placeholder="https://pay.paypay.ne.jp/..." style="width:100%;">
+      </div>
+      <button class="btn-create" id="linkCheckBtn">確認</button>
+    </div>
+    <div class="create-msg" id="linkCheckMsg"></div>
+    <div id="linkCheckResult" style="display:none; margin-top:12px; background:#0f1117; border:1px solid #2d3148; border-radius:8px; padding:14px 16px;">
+      <div style="display:flex; gap:24px; flex-wrap:wrap;">
+        <div><div style="font-size:10px;color:#718096;font-weight:700;text-transform:uppercase;letter-spacing:.06em;">金額</div><div id="lcAmount" style="font-size:22px;font-weight:700;color:#f6e05e;margin-top:4px;"></div></div>
+        <div><div style="font-size:10px;color:#718096;font-weight:700;text-transform:uppercase;letter-spacing:.06em;">送信者</div><div id="lcSender" style="font-size:14px;font-weight:600;color:#e2e8f0;margin-top:4px;"></div></div>
+        <div><div style="font-size:10px;color:#718096;font-weight:700;text-transform:uppercase;letter-spacing:.06em;">ステータス</div><div id="lcStatus" style="font-size:14px;font-weight:600;color:#68d391;margin-top:4px;"></div></div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Create -->
+  <div class="create-card">
+    <div class="section-title">送金リンク作成</div>
+    <div class="create-form">
+      <div class="form-group">
+        <label class="form-label" for="amountInput">金額（円）</label>
+        <input class="form-input" id="amountInput" type="number" min="1" placeholder="例: 5000">
+      </div>
+      <button class="btn-create" id="createBtn">リンクを作成</button>
+    </div>
+    <div class="create-msg" id="createMsg"></div>
+  </div>
+
+  <!-- Tabs + table -->
+  <div class="section-title">送金リンク一覧</div>
+  <div class="tab-bar">
+    <div class="tab active" data-tab="all">すべて</div>
+    <div class="tab" data-tab="created">作成済み</div>
+    <div class="tab" data-tab="received">受信済み</div>
+  </div>
+
+  <div class="table-wrap">
+    <table>
+      <thead>
+        <tr>
+          <th>種別</th>
+          <th>金額</th>
+          <th>作成日時</th>
+          <th>有効期限</th>
+          <th>決済番号</th>
+          <th>リンク</th>
+        </tr>
+      </thead>
+      <tbody id="linksBody"></tbody>
+    </table>
+    <div class="empty" id="emptyState" style="display:none;">リンクがまだありません</div>
+  </div>
+
+</div>
+
+<div class="copy-toast" id="copyToast">コピーしました</div>
+
+<script>
+(function () {
+  var STORE_KEY = 'paypay_links';
+  var currentTab = 'all';
+  var allLinks = [];
+  var toastTid;
+
+  function saveLinks() {
+    localStorage.setItem(STORE_KEY, JSON.stringify(allLinks));
+  }
+
+  function readLinks() {
+    try { return JSON.parse(localStorage.getItem(STORE_KEY) || '[]'); } catch(e) { return []; }
+  }
+
+  function randChars(n, chars) {
+    var s = ''; for (var i = 0; i < n; i++) s += chars[Math.floor(Math.random() * chars.length)];
+    return s;
+  }
+
+  function genId() {
+    return randChars(16, 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789');
+  }
+
+  function genPaymentId() {
+    return '0239' + randChars(16, '0123456789');
+  }
+
+  function fmtJpDatetime(d) {
+    return d.getFullYear() + '年' + (d.getMonth()+1) + '月' + d.getDate() + '日 ' + d.getHours() + '時' + String(d.getMinutes()).padStart(2,'0') + '分';
+  }
+
+  function fmtJpDate(d) {
+    return d.getFullYear() + '年' + (d.getMonth()+1) + '月' + d.getDate() + '日';
+  }
+
+  function encodePayload(obj) {
+    var bytes = new TextEncoder().encode(JSON.stringify(obj));
+    return btoa(String.fromCharCode.apply(null, bytes));
+  }
+
+  function buildLinkUrl(data) {
+    var base = new URL('link.html', location.href).href;
+    return base + '#' + encodePayload(data);
+  }
+
+  function showToast(msg) {
+    var t = document.getElementById('copyToast');
+    t.textContent = msg || 'コピーしました';
+    clearTimeout(toastTid);
+    t.classList.add('show');
+    toastTid = setTimeout(function () { t.classList.remove('show'); }, 1800);
+  }
+
+  function copyText(text) {
+    navigator.clipboard.writeText(text).then(function () { showToast('コピーしました'); });
+  }
+
+  function fmtDate(iso) {
+    var d = new Date(iso);
+    return fmtJpDatetime(d);
+  }
+
+  function renderRow(link) {
+    var isCreated = link.type === 'created';
+    var badgeHtml = isCreated
+      ? '<span class="badge badge-created">作成済み</span>'
+      : '<span class="badge badge-received">受信済み</span>';
+
+    var url = link.link_url || (link.paypay_url || '—');
+    var urlHtml;
+    if (!url || url === '—') {
+      urlHtml = '<span class="link-text">—</span>';
+    } else {
+      urlHtml = '<div class="link-cell">'
+        + '<span class="link-text"><a href="' + url + '" target="_blank">' + url + '</a></span>'
+        + '<button class="btn-copy" data-url="' + url + '">コピー</button>'
+        + '</div>';
+    }
+
+    var tr = document.createElement('tr');
+    tr.innerHTML =
+      '<td>' + badgeHtml + '</td>' +
+      '<td><span class="amount-val">' + link.amount.toLocaleString() + ' 円</span></td>' +
+      '<td><span class="date-val">' + fmtDate(link.created_at) + '</span></td>' +
+      '<td><span class="date-val">' + fmtDate(link.expires_at) + '</span></td>' +
+      '<td><span class="pid">' + link.payment_id + '</span></td>' +
+      '<td>' + urlHtml + '</td>';
+    return tr;
+  }
+
+  function renderTable() {
+    var body = document.getElementById('linksBody');
+    body.innerHTML = '';
+    var filtered = allLinks.filter(function (l) {
+      return currentTab === 'all' || l.type === currentTab;
+    });
+    var empty = document.getElementById('emptyState');
+    if (filtered.length === 0) {
+      empty.style.display = 'block';
+    } else {
+      empty.style.display = 'none';
+      filtered.slice().reverse().forEach(function (l) { body.appendChild(renderRow(l)); });
+    }
+    body.querySelectorAll('.btn-copy').forEach(function (btn) {
+      btn.addEventListener('click', function () { copyText(btn.dataset.url); });
+    });
+  }
+
+  function updateStats() {
+    var created  = allLinks.filter(function(l){ return l.type === 'created'; }).length;
+    var received = allLinks.filter(function(l){ return l.type === 'received'; }).length;
+    document.getElementById('statTotal').textContent    = allLinks.length;
+    document.getElementById('statCreated').textContent  = created;
+    document.getElementById('statReceived').textContent = received;
+  }
+
+  function loadLinks() {
+    allLinks = readLinks();
+    updateStats();
+    renderTable();
+  }
+
+  document.querySelectorAll('.tab').forEach(function (tab) {
+    tab.addEventListener('click', function () {
+      document.querySelectorAll('.tab').forEach(function(t){ t.classList.remove('active'); });
+      tab.classList.add('active');
+      currentTab = tab.dataset.tab;
+      renderTable();
+    });
+  });
+
+  var createBtn   = document.getElementById('createBtn');
+  var amountInput = document.getElementById('amountInput');
+  var createMsg   = document.getElementById('createMsg');
+
+  function setMsg(msg, type) {
+    createMsg.textContent = msg;
+    createMsg.className = 'create-msg ' + (type || '');
+  }
+
+  createBtn.addEventListener('click', function () {
+    var val = parseInt(amountInput.value, 10);
+    if (!val || val <= 0) { setMsg('金額を正しく入力してください', 'err'); return; }
+
+    var now     = new Date();
+    var expires = new Date(now.getTime() + 4 * 24 * 60 * 60 * 1000);
+    var senderNameEl = document.getElementById('senderName');
+    var senderIconEl = document.getElementById('senderIcon');
+    var payload = {
+      amount:           val,
+      send_datetime:    fmtJpDatetime(now),
+      send_date:        fmtJpDate(now),
+      expires_datetime: fmtJpDatetime(expires),
+      expires_date:     fmtJpDate(expires),
+      payment_id:       genPaymentId(),
+      sender_name:      senderNameEl ? senderNameEl.value.trim() : '',
+      sender_icon_url:  senderIconEl ? senderIconEl.value.trim() : '',
+    };
+    var linkUrl = buildLinkUrl(payload);
+
+    var entry = {
+      id:         genId(),
+      type:       'created',
+      amount:     val,
+      created_at: now.toISOString(),
+      expires_at: expires.toISOString(),
+      payment_id: payload.payment_id,
+      link_url:   linkUrl,
+    };
+
+    allLinks.push(entry);
+    saveLinks();
+    loadLinks();
+
+    amountInput.value = '';
+    setMsg('作成しました → ' + linkUrl, 'ok');
+  });
+
+  amountInput.addEventListener('keydown', function (e) {
+    if (e.key === 'Enter') createBtn.click();
+  });
+
+  loadLinks();
+
+  // --- リンクチェック ---
+  var linkCheckBtn    = document.getElementById('linkCheckBtn');
+  var linkCheckInput  = document.getElementById('linkCheckInput');
+  var linkCheckMsg    = document.getElementById('linkCheckMsg');
+  var linkCheckResult = document.getElementById('linkCheckResult');
+
+  function setLinkMsg(msg, type) {
+    linkCheckMsg.textContent = msg;
+    linkCheckMsg.className = 'create-msg ' + (type || '');
+  }
+
+  linkCheckBtn.addEventListener('click', function () {
+    var url = linkCheckInput.value.trim();
+    if (!url) { setLinkMsg('URLを入力してください', 'err'); return; }
+
+    linkCheckBtn.disabled = true;
+    linkCheckBtn.innerHTML = '<span class="spinner"></span>';
+    linkCheckResult.style.display = 'none';
+    setLinkMsg('');
+
+    fetch('/api/link_check', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ url: url })
+    })
+      .then(function (r) { return r.json(); })
+      .then(function (d) {
+        if (d.error) { setLinkMsg(d.error, 'err'); return; }
+        document.getElementById('lcAmount').textContent = (d.amount || 0).toLocaleString() + ' 円';
+        document.getElementById('lcSender').textContent = d.sender_name || '—';
+        document.getElementById('lcStatus').textContent = d.status || '—';
+        linkCheckResult.style.display = 'block';
+      })
+      .catch(function () { setLinkMsg('サーバーに接続できませんでした', 'err'); })
+      .finally(function () {
+        linkCheckBtn.disabled = false;
+        linkCheckBtn.textContent = '確認';
+      });
+  });
+
+  linkCheckInput.addEventListener('keydown', function (e) {
+    if (e.key === 'Enter') linkCheckBtn.click();
+  });
+})();
+
+(function () {
+  var torToggle   = document.getElementById('torToggle');
+  var torStatus   = document.getElementById('torStatus');
+  var torIp       = document.getElementById('torIp');
+  var torDot      = document.getElementById('torDot');
+  var torMsg      = document.getElementById('torMsg');
+  var torRenewBtn = document.getElementById('torRenewBtn');
+
+  function setTorMsg(msg, type) {
+    torMsg.textContent = msg;
+    torMsg.className = 'create-msg ' + (type || '');
+  }
+
+  function setDot(state) {
+    torDot.className = 'tor-dot';
+    if (state === 'on')   torDot.classList.add('tor-dot-on');
+    else if (state === 'warn') torDot.classList.add('tor-dot-warn');
+    else torDot.classList.add('tor-dot-off');
+  }
+
+  function fetchStatus() {
+    torStatus.textContent = '確認中...';
+    torIp.textContent = '';
+    setDot('warn');
+    fetch('/api/tor/status')
+      .then(function (r) { return r.json(); })
+      .then(function (d) {
+        torToggle.checked = d.enabled;
+        if (!d.enabled) {
+          torStatus.textContent = 'Tor 無効';
+          setDot('off');
+          torIp.textContent = '';
+        } else if (d.ok) {
+          torStatus.textContent = 'Tor 有効';
+          setDot('on');
+          torIp.textContent = d.ip || '';
+        } else {
+          torStatus.textContent = 'Tor 起動していません';
+          setDot('warn');
+          torIp.textContent = d.error ? '(' + d.error + ')' : '';
+        }
+      })
+      .catch(function () {
+        torStatus.textContent = 'サーバー未接続';
+        setDot('off');
+      });
+  }
+
+  torToggle.addEventListener('change', function () {
+    fetch('/api/tor/toggle', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ enabled: torToggle.checked })
+    })
+      .then(function (r) { return r.json(); })
+      .then(function (d) {
+        setTorMsg(d.enabled ? 'Tor を有効にしました' : 'Tor を無効にしました', d.enabled ? 'ok' : 'err');
+        fetchStatus();
+      })
+      .catch(function () { setTorMsg('サーバーに接続できませんでした', 'err'); });
+  });
+
+  torRenewBtn.addEventListener('click', function () {
+    torRenewBtn.disabled = true;
+    torRenewBtn.innerHTML = '<span class="spinner"></span>';
+    setTorMsg('');
+    fetch('/api/tor/renew', { method: 'POST' })
+      .then(function (r) { return r.json(); })
+      .then(function (d) {
+        if (d.ok) {
+          torIp.textContent = d.ip || '';
+          setTorMsg('回線を更新しました', 'ok');
+          setDot('on');
+        } else {
+          setTorMsg(d.error || '失敗しました', 'err');
+        }
+      })
+      .catch(function () { setTorMsg('サーバーに接続できませんでした', 'err'); })
+      .finally(function () {
+        torRenewBtn.disabled = false;
+        torRenewBtn.textContent = '回線更新';
+      });
+  });
+
+  fetchStatus();
+})();
+
+(function () {
+  var cfUrl     = document.getElementById('cfUrl');
+  var cfSecret  = document.getElementById('cfSecret');
+  var cfSaveBtn = document.getElementById('cfSaveBtn');
+  var cfTestBtn = document.getElementById('cfTestBtn');
+  var cfMsg     = document.getElementById('cfMsg');
+
+  function setCfMsg(msg, type) {
+    cfMsg.textContent = msg;
+    cfMsg.className = 'create-msg ' + (type || '');
+  }
+
+  fetch('/api/config')
+    .then(function (r) { return r.json(); })
+    .then(function (d) {
+      cfUrl.value    = d.cf_worker_url    || '';
+      cfSecret.value = d.cf_worker_secret || '';
+    });
+
+  cfSaveBtn.addEventListener('click', function () {
+    fetch('/api/config', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ cf_worker_url: cfUrl.value.trim(), cf_worker_secret: cfSecret.value.trim() })
+    })
+      .then(function (r) { return r.json(); })
+      .then(function () { setCfMsg('保存しました', 'ok'); })
+      .catch(function () { setCfMsg('サーバーに接続できませんでした', 'err'); });
+  });
+
+  cfTestBtn.addEventListener('click', function () {
+    cfTestBtn.disabled = true;
+    fetch('/api/config/test', { method: 'POST' })
+      .then(function (r) { return r.json(); })
+      .then(function () { setCfMsg('テスト送信しました', 'ok'); })
+      .catch(function () { setCfMsg('サーバーに接続できませんでした', 'err'); })
+      .finally(function () { cfTestBtn.disabled = false; });
+  });
+})();
+
+(function () {
+  var senderName    = document.getElementById('senderName');
+  var senderIcon    = document.getElementById('senderIcon');
+  var senderPreview = document.getElementById('senderPreview');
+  var senderSaveBtn = document.getElementById('senderSaveBtn');
+  var senderMsg     = document.getElementById('senderMsg');
+
+  function setSenderMsg(msg, type) {
+    senderMsg.textContent = msg;
+    senderMsg.className = 'create-msg ' + (type || '');
+  }
+
+  function updatePreview() {
+    var url = senderIcon.value.trim();
+    if (url) {
+      senderPreview.src = url;
+      senderPreview.style.display = 'inline-block';
+    } else {
+      senderPreview.style.display = 'none';
+    }
+  }
+
+  senderIcon.addEventListener('input', updatePreview);
+
+  fetch('/api/config')
+    .then(function (r) { return r.json(); })
+    .then(function (d) {
+      senderName.value = d.sender_name     || '';
+      senderIcon.value = d.sender_icon_url || '';
+      updatePreview();
+    });
+
+  senderSaveBtn.addEventListener('click', function () {
+    fetch('/api/config', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        sender_name:     senderName.value.trim(),
+        sender_icon_url: senderIcon.value.trim(),
+      })
+    })
+      .then(function (r) { return r.json(); })
+      .then(function () { setSenderMsg('保存しました', 'ok'); })
+      .catch(function () { setSenderMsg('サーバーに接続できませんでした', 'err'); });
+  });
+})();
+</script>
+</body>
+</html>
