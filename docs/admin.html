@@ -422,6 +422,14 @@ wrangler deploy
   }
 
   function buildLinkUrl(data) {
+    var workerUrl = (document.getElementById("cfUrl") || {}).value || "";
+    workerUrl = workerUrl.trim().replace(/\/$/, "");
+    if (workerUrl && data.id) {
+      return workerUrl + "/" + data.id;
+    }
+    if (location.host.includes("workers.dev") && data.id) {
+      return location.origin + "/" + data.id;
+    }
     var base = new URL('link.html', location.href).href;
     return base + '#' + encodePayload(data);
   }
@@ -529,7 +537,9 @@ wrangler deploy
     var expires = new Date(now.getTime() + 4 * 24 * 60 * 60 * 1000);
     var senderNameEl = document.getElementById('senderName');
     var senderIconEl = document.getElementById('senderIcon');
+    var linkId = genId();
     var payload = {
+      id:               linkId,
       amount:           val,
       send_datetime:    fmtJpDatetime(now),
       send_date:        fmtJpDate(now),
@@ -542,7 +552,7 @@ wrangler deploy
     var linkUrl = buildLinkUrl(payload);
 
     var entry = {
-      id:         genId(),
+      id:         linkId,
       type:       'created',
       amount:     val,
       created_at: now.toISOString(),
