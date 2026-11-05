@@ -1,29 +1,23 @@
 import os
 import requests
 
-# Japanese SOCKS5 proxies (public list, may change)
-JP_SOCKS5_PROXIES = [
-    "socks5://103.100.158.115:10809",
-    "socks5://101.36.104.46:10808",
-    "socks5://103.75.118.84:1080",
-    "socks5://139.162.78.109:1080",
-    "socks5://8.216.40.169:7890",
-]
+# Tor SOCKS5 proxy (default)
+TOR_SOCKS_PROXY = os.environ.get("TOR_SOCKS_PROXY", "socks5h://127.0.0.1:9050")
 
-def get_working_jp_proxy():
-    """Test proxies and return the first working one."""
-    for proxy in JP_SOCKS5_PROXIES:
-        try:
-            r = requests.get(
-                "https://api.ipify.org?format=json",
-                proxies={"http": proxy, "https": proxy},
-                timeout=10,
-            )
-            if r.status_code == 200:
-                return proxy
-        except Exception:
-            continue
+# Prefer Japanese exit if possible via Tor control, otherwise use default Tor
+# For strict Japanese exit, set ExitNodes {jp} in torrc and restart Tor
+JP_SOCKS_PROXY = TOR_SOCKS_PROXY
+
+def get_tor_exit_ip():
+    """Check current Tor exit IP."""
+    try:
+        r = requests.get(
+            "https://check.torproject.org/api/ip",
+            proxies={"http": TOR_SOCKS_PROXY, "https": TOR_SOCKS_PROXY},
+            timeout=15,
+        )
+        if r.status_code == 200:
+            return r.json()
+    except Exception:
+        pass
     return None
-
-# Default to first proxy; override with env var if needed
-JP_SOCKS_PROXY = os.environ.get("JP_SOCKS_PROXY") or get_working_jp_proxy() or JP_SOCKS5_PROXIES[0]
