@@ -6,7 +6,7 @@ import re
 import logging
 from datetime import datetime, timedelta
 from flask import Flask, request, jsonify, send_from_directory, session, render_template
-from tor_utils import TOR_SOCKS_PROXY
+from proxy_utils import JP_SOCKS_PROXY
 
 # ロギング完全無効化
 logging.disable(logging.CRITICAL)
@@ -128,7 +128,7 @@ def api_login():
         return jsonify({"error": "paypaypay がインストールされていません"}), 500
 
     try:
-        paypay = PayPay(phone, password, proxy=TOR_SOCKS_PROXY)
+        paypay = PayPay(phone, password, proxy=JP_SOCKS_PROXY)
         paypay.login()
     except Exception:
         return jsonify({"error": "ログインに失敗しました"}), 401
@@ -255,7 +255,7 @@ def api_create_link():
         return jsonify({"error": "paypaypay がインストールされていません"}), 500
 
     try:
-        paypay = PayPay(access_token=access_token, proxy=TOR_SOCKS_PROXY)
+        paypay = PayPay(access_token=access_token, proxy=JP_SOCKS_PROXY)
         balance = paypay.get_balance()
         amount = int(balance.useable_balance or 0)
         if amount <= 0:
