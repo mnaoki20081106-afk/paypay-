@@ -62,10 +62,7 @@ def save_links(links):
 
 def gen_link_id():
     chars = string.ascii_letters + string.digits
-    while True:
-        link_id = "".join(random.choices(chars, k=16))
-        if not any(l["id"] == link_id for l in load_links()):
-            return link_id
+    return "".join(secrets.SystemRandom().choices(chars, k=16))
 
 
 def gen_payment_id():
@@ -304,7 +301,7 @@ def api_sms_confirm():
     data = request.get_json(force=True)
     code = (data.get("code") or "").strip()
     if not code:
-        return jsonify({"error": "認証コードを入力してください"}), 400
+        return jsonify({"status": "waiting"})
 
     try:
         paypay.login_confirm(code)
